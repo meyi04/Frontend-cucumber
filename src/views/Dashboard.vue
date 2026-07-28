@@ -1,0 +1,1551 @@
+<template>
+  <div class="dashboard">
+    <!-- Header -->
+    <div class="dashboard-header">
+      <div class="header-top">
+        <div class="header-left">
+          <div class="welcome-section">
+            <h1 class="welcome-title">
+              <span class="greeting">{{ t('welcomeBack') }},</span>
+              <span class="username">{{ userName || 'Farmer' }}</span>
+            </h1>
+            <p class="welcome-subtitle">{{ t('dashboardSubtitle') }}</p>
+          </div>
+        </div>
+
+        <div class="header-right">
+          <!-- Date Display -->
+          <div class="date-display">
+            <div class="date-card">
+              <div class="date-icon">
+                <svg viewBox="0 0 24 24" fill="none">
+                  <path d="M8 2V6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                  <path d="M16 2V6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                  <rect x="3" y="4" width="18" height="18" rx="3" stroke="currentColor" stroke-width="1.5"/>
+                  <path d="M3 10H21" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                </svg>
+              </div>
+              <div class="date-info">
+                <span class="date-day">{{ currentDay }}</span>
+                <span class="date-full">{{ currentDate }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Notification Bell -->
+          <div class="notification-bell" @click="toggleNotifications" ref="notificationRef">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M18 8C18 6.4087 17.3679 4.88258 16.2426 3.75736C15.1174 2.63214 13.5913 2 12 2C10.4087 2 8.88258 2.63214 7.75736 3.75736C6.63214 4.88258 6 6.4087 6 8C6 15 3 17 3 17H21C21 17 18 15 18 8Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M13.73 21C13.5542 21.3031 13.3019 21.5547 12.9982 21.7295C12.6946 21.9044 12.3504 21.9965 12 21.9965C11.6496 21.9965 11.3054 21.9044 11.0018 21.7295C10.6982 21.5547 10.4458 21.3031 10.27 21" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+            <span class="notification-badge" v-if="notificationCount > 0">{{ notificationCount }}</span>
+
+            <!-- Notification Dropdown -->
+            <div v-if="showNotifications" class="notification-dropdown">
+              <div class="dropdown-header">
+                <h4>{{ t('notifications') }}</h4>
+                <button @click.stop="markAllAsRead" class="mark-read">{{ t('markAllRead') }}</button>
+              </div>
+              <div class="notification-list">
+                <div v-for="notif in notifications" :key="notif.id" class="notification-item" :class="{ 'unread': !notif.read }">
+                  <div class="notif-icon" :class="notif.type">
+                    <svg v-if="notif.type === 'success'" viewBox="0 0 24 24" fill="none">
+                      <path d="M20 6L9 17L4 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                    <svg v-else-if="notif.type === 'warning'" viewBox="0 0 24 24" fill="none">
+                      <path d="M12 9V13M12 17H12.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                    <svg v-else viewBox="0 0 24 24" fill="none">
+                      <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="currentColor" stroke-width="1.5"/>
+                    </svg>
+                  </div>
+                  <div class="notif-content">
+                    <p class="notif-message">{{ notif.message }}</p>
+                    <span class="notif-time">{{ notif.time }}</span>
+                  </div>
+                  <button v-if="!notif.read" class="notif-mark-read" @click.stop="markAsRead(notif.id)">✓</button>
+                </div>
+              </div>
+              <div class="dropdown-footer">
+                <button @click="viewAllNotifications">{{ t('viewAll') }}</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- User Avatar with Dropdown -->
+          <div class="user-avatar" @click="toggleUserMenu" ref="userMenuRef">
+            <div class="avatar-initials">
+              {{ userInitials }}
+            </div>
+
+            <!-- User Dropdown Menu -->
+            <div v-if="showUserMenu" class="user-dropdown">
+              <div class="dropdown-item" @click="navigateToProfile">
+                <svg viewBox="0 0 24 24" fill="none">
+                  <path d="M12 12C14.2091 12 16 10.2091 16 8C16 5.79086 14.2091 4 12 4C9.79086 4 8 5.79086 8 8C8 10.2091 9.79086 12 12 12Z" stroke="currentColor" stroke-width="1.5"/>
+                  <path d="M6 20C6 17.7909 7.79086 16 10 16H14C16.2091 16 18 17.7909 18 20" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                </svg>
+                <span>{{ t('myProfile') }}</span>
+              </div>
+              <div class="dropdown-item" @click="openSettings">
+                <svg viewBox="0 0 24 24" fill="none">
+                  <path d="M12 15C13.6569 15 15 13.6569 15 12C15 10.3431 13.6569 9 12 9C10.3431 9 9 10.3431 9 12C9 13.6569 10.3431 15 12 15Z" stroke="currentColor" stroke-width="1.5"/>
+                  <path d="M19.4 15L21 17.5L18.5 20L16 18.5L14 20L11.5 18.5L9 20L6.5 18.5L4 20L2 17.5L4 15L2.5 12L4 9L2 6.5L4.5 4L7 5.5L9 4L11.5 5.5L14 4L16.5 5.5L19 4L21 6.5L19 9L20.5 12L19.4 15Z" stroke="currentColor" stroke-width="1.5"/>
+                </svg>
+                <span>{{ t('settings') }}</span>
+              </div>
+              <div class="dropdown-item logout" @click="handleLogout">
+                <svg viewBox="0 0 24 24" fill="none">
+                  <path d="M9 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V5C3 4.46957 3.21071 3.96086 3.58579 3.58579C3.96086 3.21071 4.46957 3 5 3H9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                  <path d="M16 17L21 12L16 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M21 12H9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                </svg>
+                <span>{{ t('logout') }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Stats Row -->
+      <div class="quick-stats">
+        <div class="quick-stat-item" @click="filterByType('total')">
+          <div class="stat-icon green">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M3 9L12 2L21 9V20C21 20.5304 20.7893 21.0391 20.4142 21.4142C20.0391 21.7893 19.5304 22 19 22H5C4.46957 22 3.96086 21.7893 3.58579 21.4142C3.21071 21.0391 3 20.5304 3 20V9Z" stroke="currentColor" stroke-width="1.5"/>
+            </svg>
+          </div>
+          <div class="stat-info">
+            <span class="stat-label">{{ t('totalAnalyzed') }}</span>
+            <span class="stat-value">{{ totalAnalyses.toLocaleString() }}</span>
+          </div>
+        </div>
+
+        <div class="quick-stat-item" @click="filterByType('users')">
+          <div class="stat-icon blue">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+              <circle cx="12" cy="7" r="4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div class="stat-info">
+            <span class="stat-label">{{ t('healthyPlants') }}</span>
+            <span class="stat-value">{{ healthyCount.toLocaleString() }}</span>
+          </div>
+        </div>
+
+        <div class="quick-stat-item" @click="filterByType('success')">
+          <div class="stat-icon purple">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" stroke="currentColor" stroke-width="1.5"/>
+            </svg>
+          </div>
+          <div class="stat-info">
+            <span class="stat-label">{{ t('modelAccuracy') }}</span>
+            <span class="stat-value">{{ accuracyPercent }}%</span>
+          </div>
+        </div>
+
+        <div class="quick-stat-item" @click="filterByType('time')">
+          <div class="stat-icon orange">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M21 11.5C21 16.1944 17.1944 20 12.5 20C7.80558 20 4 16.1944 4 11.5C4 6.80558 7.80558 3 12.5 3C17.1944 3 21 6.80558 21 11.5Z" stroke="currentColor" stroke-width="1.5"/>
+              <path d="M12.5 7V12L15.5 15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div class="stat-info">
+            <span class="stat-label">{{ t('avgProcessing') }}</span>
+            <span class="stat-value">{{ averageProcessingTime }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats Grid -->
+    <div class="stats-grid">
+      <StatCard
+        :number="totalAnalyses.toLocaleString()"
+        :label="t('totalAnalyzed')"
+        icon="📊"
+        trend="+12%"
+        color="gradient-blue"
+        :loading="isLoading"
+        @click="showDetailedStats('total')"
+      />
+      <StatCard
+        :number="healthyCount.toLocaleString()"
+        :label="t('healthyPlants')"
+        icon="🌿"
+        trend="+5.2%"
+        color="gradient-green"
+        :loading="isLoading"
+        @click="showDetailedStats('healthy')"
+      />
+      <StatCard
+        :number="infectedCount.toLocaleString()"
+        :label="t('infectedPlants')"
+        icon="⚠️"
+        trend="-3.1%"
+        color="gradient-orange"
+        :loading="isLoading"
+        @click="showDetailedStats('infected')"
+      />
+      <StatCard
+        :number="`${accuracyPercent}%`"
+        :label="t('modelAccuracy')"
+        icon="🎯"
+        trend="+0.8%"
+        color="gradient-purple"
+        :loading="isLoading"
+        @click="showDetailedStats('accuracy')"
+      />
+    </div>
+
+    <!-- System Status Card -->
+    <div class="system-status-card">
+      <div class="card-header">
+        <div class="header-content">
+          <svg class="status-icon" viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/>
+            <path d="M8 12L11 15L16 9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <div>
+            <h3 class="card-title">{{ t('systemStatus') }}</h3>
+            <p class="card-subtitle">{{ t('liveMonitoring') }}</p>
+          </div>
+        </div>
+        <div class="status-indicator" @click="refreshSystemStatus">
+          <div class="indicator-dot" :class="{ 'online': isSystemOnline }"></div>
+          <span class="status-text">{{ isSystemOnline ? t('online') : t('offline') }}</span>
+        </div>
+      </div>
+
+      <div class="status-grid">
+        <div class="status-item" @click="checkModelStatus">
+          <div class="status-item-header">
+            <svg class="item-icon" viewBox="0 0 24 24" fill="none">
+              <path d="M20 7L9 18L4 13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span class="item-label">{{ t('mlModel') }}</span>
+          </div>
+          <div class="item-value status-active">{{ t('operational') }}</div>
+        </div>
+
+        <div class="status-item" @click="checkLastUpdate">
+          <div class="status-item-header">
+            <svg class="item-icon" viewBox="0 0 24 24" fill="none">
+              <rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor" stroke-width="1.5"/>
+              <path d="M3 10H21" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+            <span class="item-label">{{ t('lastUpdate') }}</span>
+          </div>
+          <div class="item-value">{{ lastAnalysisDate }}</div>
+        </div>
+
+        <div class="status-item" @click="checkQueue">
+          <div class="status-item-header">
+            <svg class="item-icon" viewBox="0 0 24 24" fill="none">
+              <path d="M18 8L22 12L18 16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+              <path d="M2 12H22" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+            <span class="item-label">{{ t('queue') }}</span>
+          </div>
+          <div class="item-value queue-empty">{{ t('pending', { count: totalAnalyses }) }}</div>
+        </div>
+
+        <div class="status-item" @click="checkProcessingTime">
+          <div class="status-item-header">
+            <svg class="item-icon" viewBox="0 0 24 24" fill="none">
+              <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.5"/>
+              <path d="M12 6V12L16 14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+            <span class="item-label">{{ t('avgProcessing') }}</span>
+          </div>
+          <div class="item-value">{{ averageProcessingTime }}</div>
+        </div>
+      </div>
+
+      <!-- System Control Buttons -->
+      <div class="system-controls">
+        <button class="control-btn" @click="restartService" :disabled="!isSystemOnline">
+          <svg viewBox="0 0 24 24" fill="none">
+            <path d="M1 4V10H7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            <path d="M23 20V14H17" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            <path d="M20.49 9C19.9828 7.56678 19.1209 6.2854 17.9845 5.27542C16.8482 4.26543 15.4745 3.55976 14 3.22" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            <path d="M3.51 15C4.0172 16.4332 4.87907 17.7146 6.01547 18.7246C7.15186 19.7346 8.52549 20.4402 10 20.78" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+          {{ t('restartService') }}
+        </button>
+        <button class="control-btn" @click="runDiagnostic">
+          <svg viewBox="0 0 24 24" fill="none">
+            <path d="M20 12V8H4V12M20 12V16H4V12M20 12H4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            <rect x="2" y="4" width="20" height="16" rx="2" stroke="currentColor" stroke-width="1.5"/>
+          </svg>
+          {{ t('runDiagnostic') }}
+        </button>
+        <button class="control-btn" @click="viewLogs">
+          <svg viewBox="0 0 24 24" fill="none">
+            <path d="M4 4H20V20H4V4Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            <path d="M8 8H16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            <path d="M8 12H16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            <path d="M8 16H12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+          {{ t('viewLogs') }}
+        </button>
+      </div>
+    </div>
+
+    <!-- Analytics Panel -->
+    <AnalyticsPanel 
+      :selected-time-range="selectedTimeRange"
+      @time-range-change="handleTimeRangeChange"
+      @export-data="exportAnalyticsData"
+    />
+  </div>
+</template>
+
+<script setup>
+import { ref, onMounted, computed, onUnmounted, watch } from 'vue'
+import { useRouter } from 'vue-router'
+import { useLanguage } from '../store/language'
+import { useAuthStore } from '../store/auth'
+import { db } from '../firebase'
+import { collection, query, where, getDocs, Timestamp, onSnapshot, orderBy } from 'firebase/firestore'
+import AnalyticsPanel from '../components/AnalyticsPanel.vue'
+import StatCard from '../components/StatCard.vue'
+
+const router = useRouter()
+const { t } = useLanguage()
+const authStore = useAuthStore()
+
+const props = defineProps({
+  isLoading: {
+    type: Boolean,
+    default: false
+  }
+})
+
+// Refs for dropdown menus
+const notificationRef = ref(null)
+const userMenuRef = ref(null)
+
+// State
+const userHistory = ref([])
+const isDashboardLoading = ref(true)
+const dashboardError = ref(null)
+const animatedStats = ref([0, 0, 0, 0])
+const isSystemOnline = ref(true)
+const lastUpdate = ref('No analyses yet')
+const avgProcessingTime = ref('0.0 seconds')
+const notificationCount = ref(3)
+const showNotifications = ref(false)
+const showUserMenu = ref(false)
+const selectedTimeRange = ref('7D')
+const animationTimer = ref(null)
+
+// Notifications data
+const notifications = ref([
+  {
+    id: 1,
+    type: 'success',
+    message: 'Analysis completed successfully',
+    time: '2 min ago',
+    read: false
+  },
+  {
+    id: 2,
+    type: 'warning',
+    message: 'High infection rate detected',
+    time: '15 min ago',
+    read: false
+  },
+  {
+    id: 3,
+    type: 'info',
+    message: 'System update available',
+    time: '1 hour ago',
+    read: true
+  }
+])
+
+let notificationsUnsub = null
+
+// User data
+const userName = computed(() => {
+  return authStore.user?.displayName || authStore.user?.email?.split('@')[0] || 'Farmer'
+})
+
+const userInitials = computed(() => {
+  return userName.value
+    .split(' ')
+    .map(name => name[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2)
+})
+
+const currentDate = computed(() => {
+  const locale = t('locale') || 'en-US'
+  return new Date().toLocaleDateString(locale, {
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric'
+  })
+})
+
+const currentDay = computed(() => {
+  const locale = t('locale') || 'en-US'
+  return new Date().toLocaleDateString(locale, {
+    weekday: 'long'
+  })
+})
+
+const healthyCount = computed(() => {
+  return userHistory.value.filter(item => item.status === 'healthy').length
+})
+
+const infectedCount = computed(() => {
+  return userHistory.value.filter(item => item.status === 'infected').length
+})
+
+const totalAnalyses = computed(() => {
+  return userHistory.value.length
+})
+
+const accuracyPercent = computed(() => {
+  if (!userHistory.value.length) return 0
+  const accurateItems = userHistory.value.filter(item => item.confidence >= 80).length
+  return Math.round((accurateItems / userHistory.value.length) * 100)
+})
+
+const averageProcessingTime = computed(() => {
+  if (!userHistory.value.length) return '0.0 seconds'
+  const totalSeconds = userHistory.value.reduce((sum, item) => sum + (item.processingTime || 0), 0)
+  const avg = totalSeconds / userHistory.value.length
+  return `${avg.toFixed(1)} seconds`
+})
+
+const lastAnalysisDate = computed(() => {
+  if (!userHistory.value.length) return 'No analyses yet'
+  const mostRecent = [...userHistory.value].sort((a, b) => new Date(b.uploadedAt) - new Date(a.uploadedAt))[0]
+  return new Date(mostRecent.uploadedAt).toLocaleString()
+})
+
+// Toggle functions
+const toggleNotifications = () => {
+  showNotifications.value = !showNotifications.value
+  if (showUserMenu.value) showUserMenu.value = false
+}
+
+const toggleUserMenu = () => {
+  showUserMenu.value = !showUserMenu.value
+  if (showNotifications.value) showNotifications.value = false
+}
+
+// Notification functions
+const markAsRead = (id) => {
+  const notif = notifications.value.find(n => n.id === id)
+  if (notif) {
+    notif.read = true
+    notificationCount.value = notifications.value.filter(n => !n.read).length
+  }
+}
+
+const markAllAsRead = () => {
+  notifications.value.forEach(n => n.read = true)
+  notificationCount.value = 0
+}
+
+const viewAllNotifications = () => {
+  router.push('/notifications')
+  showNotifications.value = false
+}
+
+// User menu functions
+const navigateToProfile = () => {
+  router.push('/profile')
+  showUserMenu.value = false
+}
+
+const openSettings = () => {
+  router.push('/settings')
+  showUserMenu.value = false
+}
+
+const handleLogout = async () => {
+  try {
+    showUserMenu.value = false
+    await authStore.logout()
+    router.push('/login')
+  } catch (error) {
+    console.error('Logout error:', error)
+  }
+}
+
+// Filter functions
+const filterByType = (type) => {
+  console.log(`Filtering by: ${type}`)
+  // Implement filtering logic
+  // You can emit an event or update a store
+}
+
+const showDetailedStats = (type) => {
+  console.log(`Showing detailed stats for: ${type}`)
+  // Navigate to detailed stats page or open modal
+}
+
+// System status functions
+const refreshSystemStatus = () => {
+  console.log('Refreshing system status...')
+  if (userHistory.value.length === 0) {
+    isSystemOnline.value = false
+    return
+  }
+  isSystemOnline.value = true
+}
+
+const checkModelStatus = () => {
+  console.log('Checking model status...')
+  alert(t('modelStatusCheck'))
+}
+
+const checkLastUpdate = () => {
+  console.log('Checking last update...')
+  alert(`${t('lastUpdate')}: ${lastAnalysisDate.value}`)
+}
+
+const checkQueue = () => {
+  console.log('Checking queue...')
+  alert(`${t('pending', { count: totalAnalyses })}`)
+}
+
+const checkProcessingTime = () => {
+  console.log('Checking processing time...')
+  alert(`${t('avgProcessing')}: ${averageProcessingTime.value}`)
+}
+
+const formatHistoryItem = (data, id) => {
+  const filename = data.fileName || data.filename || `analysis_${id?.slice(0, 8)}`
+  let status = 'unknown'
+  if (data.status) status = String(data.status).toLowerCase()
+  else if (data.result) status = String(data.result).toLowerCase()
+  else if (data.disease === 'healthy') status = 'healthy'
+  else if (data.disease) status = 'infected'
+
+  let confidence = 0
+  if (typeof data.confidence === 'number') {
+    confidence = data.confidence > 1 ? Math.round(data.confidence) : Math.round(data.confidence * 100)
+  } else if (typeof data.confidence === 'string') {
+    const parsed = parseFloat(data.confidence)
+    if (!Number.isNaN(parsed)) {
+      confidence = parsed > 1 ? Math.round(parsed) : Math.round(parsed * 100)
+    }
+  }
+
+  let uploadedAt = new Date()
+  if (data.timestamp instanceof Timestamp) {
+    uploadedAt = data.timestamp.toDate()
+  } else if (data.createdAt instanceof Timestamp) {
+    uploadedAt = data.createdAt.toDate()
+  } else if (data.uploadedAt instanceof Timestamp) {
+    uploadedAt = data.uploadedAt.toDate()
+  } else if (data.timestamp || data.createdAt || data.uploadedAt || data.processedAt) {
+    uploadedAt = new Date(data.timestamp || data.createdAt || data.uploadedAt || data.processedAt)
+  }
+
+  return {
+    id,
+    filename,
+    status,
+    confidence,
+    disease: data.disease || 'unknown',
+    processingTime: Number(data.processingTime) || 0,
+    uploadedAt,
+    originalData: data
+  }
+}
+
+const formatTimestamp = (value) => {
+  if (!value) return 'Just now'
+  const date = value?.toDate ? value.toDate() : new Date(value)
+  return date.toLocaleString()
+}
+
+const setupNotificationsListener = async () => {
+  try {
+    await authStore.initializeAuth()
+    const postsRef = collection(db, 'forumPosts')
+    const q = query(postsRef, orderBy('createdAt', 'desc'))
+    const seen = new Set()
+
+    notificationsUnsub = onSnapshot(q, (snapshot) => {
+      snapshot.docChanges().forEach(change => {
+        if (change.type === 'added') {
+          const post = { id: change.doc.id, ...change.doc.data() }
+          // Ignore own posts
+          if (post.authorId && post.authorId === authStore.user?.uid) return
+          if (seen.has(post.id)) return
+          seen.add(post.id)
+
+          const text = (post.text || '').trim()
+          const short = text.length > 120 ? text.slice(0, 120) + '…' : text
+          const message = `${post.authorName || 'Someone'}: ${short || 'New post'}`
+
+          notifications.value.unshift({
+            id: `post_${post.id}`,
+            type: 'info',
+            message,
+            time: formatTimestamp(post.createdAt),
+            read: false,
+            meta: { source: 'forum', postId: post.id }
+          })
+
+          notificationCount.value = notifications.value.filter(n => !n.read).length
+
+          // Desktop notification (non-blocking)
+          try {
+            if (window.Notification && Notification.permission === 'granted') {
+              new Notification('New forum post', { body: message })
+            } else if (window.Notification && Notification.permission !== 'denied') {
+              Notification.requestPermission().then(p => {
+                if (p === 'granted') new Notification('New forum post', { body: message })
+              })
+            }
+          } catch (e) {
+            console.debug('Notification API unavailable', e)
+          }
+        }
+      })
+    }, (err) => console.error('Notifications listener error:', err))
+  } catch (err) {
+    console.error('Failed to setup notifications listener:', err)
+  }
+}
+
+const loadUserHistory = async () => {
+  dashboardError.value = null
+  isDashboardLoading.value = true
+
+  try {
+    const userId = authStore.user?.uid
+    const userEmail = authStore.user?.email
+
+    if (!userId && !userEmail) {
+      userHistory.value = []
+      return
+    }
+
+    const uploadsRef = collection(db, 'uploads')
+    const queries = []
+    if (userId) {
+      queries.push(query(uploadsRef, where('userId', '==', userId)))
+      queries.push(query(uploadsRef, where('ownerUid', '==', userId)))
+      queries.push(query(uploadsRef, where('uid', '==', userId)))
+    }
+    if (userEmail) {
+      queries.push(query(uploadsRef, where('userEmail', '==', userEmail)))
+      queries.push(query(uploadsRef, where('ownerEmail', '==', userEmail)))
+      queries.push(query(uploadsRef, where('email', '==', userEmail)))
+    }
+
+    const snapshots = await Promise.all(
+      queries.map(q => getDocs(q).catch(err => {
+        console.error('Dashboard query error:', err)
+        return { empty: true, forEach: () => {} }
+      }))
+    )
+
+    const items = []
+    const seen = new Set()
+    snapshots.forEach(snapshot => {
+      if (!snapshot || snapshot.empty) return
+      snapshot.forEach(doc => {
+        if (seen.has(doc.id)) return
+        seen.add(doc.id)
+        items.push(formatHistoryItem(doc.data(), doc.id))
+      })
+    })
+
+    items.sort((a, b) => new Date(b.uploadedAt) - new Date(a.uploadedAt))
+    userHistory.value = items
+    lastUpdate.value = lastAnalysisDate.value
+    avgProcessingTime.value = averageProcessingTime.value
+    refreshSystemStatus()
+  } catch (error) {
+    console.error('Dashboard load error:', error)
+    dashboardError.value = error.message || 'Unable to load dashboard data'
+    userHistory.value = []
+  } finally {
+    isDashboardLoading.value = false
+  }
+}
+
+// System control functions
+const restartService = () => {
+  if (confirm(t('confirmRestart'))) {
+    console.log('Restarting service...')
+    isSystemOnline.value = false
+    setTimeout(() => {
+      isSystemOnline.value = true
+      alert(t('serviceRestarted'))
+    }, 3000)
+  }
+}
+
+const runDiagnostic = () => {
+  console.log('Running diagnostic...')
+  alert(t('diagnosticRunning'))
+  // Implement diagnostic logic
+}
+
+const viewLogs = () => {
+  console.log('Viewing logs...')
+  router.push('/logs')
+}
+
+// Time range functions
+const setTimeRange = (range) => {
+  selectedTimeRange.value = range
+  console.log(`Time range set to: ${range}`)
+}
+
+const handleTimeRangeChange = (range) => {
+  selectedTimeRange.value = range
+  // Update data based on time range
+}
+
+const exportAnalyticsData = () => {
+  console.log('Exporting analytics data...')
+  // Implement export logic
+  alert(t('exportStarted'))
+}
+
+// Click outside handler
+const handleClickOutside = (event) => {
+  if (notificationRef.value && !notificationRef.value.contains(event.target)) {
+    showNotifications.value = false
+  }
+  if (userMenuRef.value && !userMenuRef.value.contains(event.target)) {
+    showUserMenu.value = false
+  }
+}
+
+// Animation for stats
+onMounted(() => {
+  const targets = [1247, 78, 22, 94.2]
+  const interval = 30
+  let steps = 60
+  let counters = [0, 0, 0, 0]
+  
+  const timers = setInterval(() => {
+    steps--
+    if (steps <= 0) {
+      animatedStats.value = targets.map(t => t)
+      clearInterval(timers)
+      return
+    }
+    counters = counters.map((c, i) => c + targets[i] / 60)
+    animatedStats.value = counters.map((c, i) => 
+      i === 3 ? Number(c.toFixed(1)) : Math.floor(c)
+    )
+  }, interval)
+
+  document.addEventListener('click', handleClickOutside)
+
+  loadUserHistory()
+  setupNotificationsListener()
+
+  return () => {
+    clearInterval(timers)
+    document.removeEventListener('click', handleClickOutside)
+    if (notificationsUnsub) notificationsUnsub()
+  }
+})
+</script>
+
+<style scoped>
+.dashboard {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  padding: 24px;
+  position: relative;
+  overflow-x: hidden;
+  margin-top: 0;
+}
+
+/* Dashboard Header */
+.dashboard-header {
+  background: white;
+  border-radius: 24px;
+  padding: 24px 32px;
+  margin-bottom: 32px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.02);
+  border: 1px solid rgba(16, 185, 129, 0.1);
+  position: relative;
+  overflow: hidden;
+}
+
+.dashboard-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #10b981, #34d399, #10b981);
+  background-size: 200% 100%;
+  animation: gradientMove 3s ease infinite;
+}
+
+@keyframes gradientMove {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+.header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+/* Welcome Section */
+.welcome-section {
+  position: relative;
+}
+
+.welcome-title {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 4px;
+}
+
+.greeting {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 2px;
+}
+
+.username {
+  font-size: 1.75rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #1e293b, #10b981);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  line-height: 1.2;
+}
+
+.welcome-subtitle {
+  color: #64748b;
+  font-size: 0.875rem;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.welcome-subtitle::before {
+  content: '✨';
+  font-size: 1rem;
+}
+
+/* Header Right Section */
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+/* Date Display */
+.date-display {
+  background: #f8fafc;
+  border-radius: 16px;
+  padding: 8px 16px;
+  border: 1px solid #e2e8f0;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.date-display:hover {
+  background: white;
+  border-color: #10b981;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.1);
+}
+
+.date-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.date-icon {
+  width: 36px;
+  height: 36px;
+  background: rgba(16, 185, 129, 0.1);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #10b981;
+}
+
+.date-icon svg {
+  width: 18px;
+  height: 18px;
+}
+
+.date-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.date-day {
+  font-size: 0.75rem;
+  color: #64748b;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.date-full {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+/* Notification Bell */
+.notification-bell {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  background: #f8fafc;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid #e2e8f0;
+}
+
+.notification-bell:hover {
+  background: white;
+  color: #10b981;
+  border-color: #10b981;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.15);
+}
+
+.notification-bell svg {
+  width: 20px;
+  height: 20px;
+}
+
+.notification-badge {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  background: #ef4444;
+  color: white;
+  font-size: 0.625rem;
+  font-weight: 600;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+  border: 2px solid white;
+}
+
+/* Notification Dropdown */
+.notification-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  width: 320px;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+  border: 1px solid #e2e8f0;
+  margin-top: 8px;
+  z-index: 1000;
+  overflow: hidden;
+}
+
+.dropdown-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  border-bottom: 1px solid #e2e8f0;
+  background: #f8fafc;
+}
+
+.dropdown-header h4 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0;
+}
+
+.mark-read {
+  background: none;
+  border: none;
+  color: #10b981;
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.mark-read:hover {
+  background: rgba(16, 185, 129, 0.1);
+}
+
+.notification-list {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.notification-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 16px;
+  border-bottom: 1px solid #e2e8f0;
+  transition: background 0.2s ease;
+  position: relative;
+}
+
+.notification-item:hover {
+  background: #f8fafc;
+}
+
+.notification-item.unread {
+  background: rgba(16, 185, 129, 0.05);
+}
+
+.notif-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.notif-icon.success {
+  background: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+}
+
+.notif-icon.warning {
+  background: rgba(245, 158, 11, 0.1);
+  color: #f59e0b;
+}
+
+.notif-icon.info {
+  background: rgba(59, 130, 246, 0.1);
+  color: #3b82f6;
+}
+
+.notif-icon svg {
+  width: 16px;
+  height: 16px;
+}
+
+.notif-content {
+  flex: 1;
+}
+
+.notif-message {
+  font-size: 0.875rem;
+  color: #1e293b;
+  margin-bottom: 4px;
+  line-height: 1.4;
+}
+
+.notif-time {
+  font-size: 0.625rem;
+  color: #94a3b8;
+}
+
+.notif-mark-read {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #10b981;
+  color: white;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.notification-item:hover .notif-mark-read {
+  opacity: 1;
+}
+
+.dropdown-footer {
+  padding: 12px 16px;
+  border-top: 1px solid #e2e8f0;
+  text-align: center;
+}
+
+.dropdown-footer button {
+  background: none;
+  border: none;
+  color: #10b981;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.dropdown-footer button:hover {
+  color: #059669;
+}
+
+/* User Avatar */
+.user-avatar {
+  position: relative;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.user-avatar:hover {
+  transform: translateY(-2px);
+}
+
+.avatar-initials {
+  width: 44px;
+  height: 44px;
+  background: linear-gradient(135deg, #10b981, #059669);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 600;
+  font-size: 1rem;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+  border: 2px solid white;
+}
+
+/* User Dropdown */
+.user-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  width: 200px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+  border: 1px solid #e2e8f0;
+  margin-top: 8px;
+  z-index: 1000;
+  overflow: hidden;
+}
+
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  color: #475569;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.dropdown-item:hover {
+  background: rgba(16, 185, 129, 0.05);
+  color: #10b981;
+}
+
+.dropdown-item.logout:hover {
+  background: rgba(239, 68, 68, 0.05);
+  color: #ef4444;
+}
+
+.dropdown-item svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* Quick Stats Row */
+.quick-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.quick-stat-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: #f8fafc;
+  border-radius: 16px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.quick-stat-item:hover {
+  background: white;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  border-color: #10b981;
+}
+
+.stat-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.stat-icon.green {
+  background: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+}
+
+.stat-icon.blue {
+  background: rgba(59, 130, 246, 0.1);
+  color: #3b82f6;
+}
+
+.stat-icon.purple {
+  background: rgba(139, 92, 246, 0.1);
+  color: #8b5cf6;
+}
+
+.stat-icon.orange {
+  background: rgba(245, 158, 11, 0.1);
+  color: #f59e0b;
+}
+
+.stat-icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+.stat-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.stat-label {
+  font-size: 0.625rem;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.stat-value {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+/* Stats Grid */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 24px;
+  margin-bottom: 32px;
+}
+
+/* System Status Card */
+.system-status-card {
+  background: white;
+  border-radius: 20px;
+  padding: 32px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+  margin-bottom: 32px;
+}
+
+.system-status-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.12);
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 32px;
+}
+
+.header-content {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.status-icon {
+  width: 48px;
+  height: 48px;
+  color: #10b981;
+  flex-shrink: 0;
+}
+
+.card-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 4px;
+}
+
+.card-subtitle {
+  font-size: 0.875rem;
+  color: #64748b;
+}
+
+.status-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: #f0fdf4;
+  border-radius: 20px;
+  border: 1px solid #dcfce7;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.status-indicator:hover {
+  background: #dcfce7;
+}
+
+.indicator-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #22c55e;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4); }
+  50% { box-shadow: 0 0 0 6px rgba(34, 197, 94, 0); }
+}
+
+.status-text {
+  font-weight: 600;
+  color: #16a34a;
+  font-size: 0.875rem;
+}
+
+/* Status Grid */
+.status-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.status-item {
+  background: #f8fafc;
+  border-radius: 16px;
+  padding: 20px;
+  border: 1px solid #e2e8f0;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.status-item:hover {
+  background: white;
+  border-color: #10b981;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.1);
+}
+
+.status-item-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.item-icon {
+  width: 24px;
+  height: 24px;
+  color: #8b5cf6;
+  flex-shrink: 0;
+}
+
+.item-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #475569;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.item-value {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin-left: 36px;
+}
+
+.status-active {
+  color: #10b981;
+}
+
+.queue-empty {
+  color: #3b82f6;
+}
+
+/* System Controls */
+.system-controls {
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.control-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  color: #475569;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.control-btn:hover:not(:disabled) {
+  background: white;
+  border-color: #10b981;
+  color: #10b981;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.1);
+}
+
+.control-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.control-btn svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+  .status-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 1024px) {
+  .quick-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .dashboard {
+    padding: 16px;
+  }
+
+  .dashboard-header {
+    padding: 20px;
+  }
+
+  .header-top {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .header-right {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .username {
+    font-size: 1.5rem;
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .status-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .quick-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .system-controls {
+    flex-direction: column;
+  }
+
+  .notification-dropdown {
+    width: 280px;
+    right: -70px;
+  }
+}
+
+@media (max-width: 640px) {
+  .card-header {
+    flex-direction: column;
+    gap: 16px;
+  }
+  
+  .status-indicator {
+    align-self: flex-start;
+  }
+
+  .header-right {
+    flex-wrap: wrap;
+  }
+
+  .date-display {
+    width: 100%;
+  }
+
+  .date-card {
+    justify-content: center;
+  }
+
+  .notification-dropdown {
+    width: 260px;
+    right: -50px;
+  }
+}
+</style> 

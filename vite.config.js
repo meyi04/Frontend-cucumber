@@ -5,11 +5,11 @@ import vue from '@vitejs/plugin-vue'
 export default defineConfig({
   plugins: [vue()],
   server: {
-    host: '0.0.0.0',  // Allows external connections
+    host: '127.0.0.1',  // Allows external connections
     port: 5173,
     strictPort: true,
     hmr: {
-      host: 'localhost'  // For hot reload to work
+      host: '127.0.0.1'  // For hot reload to work
     }
   }
 })

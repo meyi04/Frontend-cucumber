@@ -9,7 +9,7 @@
     </button>
 
     <!-- Sidebar -->
-    <nav class="sidebar" :class="{ 'collapsed': isCollapsed }">
+    <nav class="sidebar" :class="{ 'collapsed': isCollapsed }" @click="handleNavClick">
       <!-- Logo Section -->
       <div class="logo-section" @click="isCollapsed = false">
         <h1 class="logo-title" :class="{ 'collapsed': isCollapsed }">
@@ -164,6 +164,8 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../store/auth'
 
+const emit = defineEmits(['close', 'openSettings'])
+
 const props = defineProps({
   isOpen: {
     type: Boolean,
@@ -201,6 +203,12 @@ const toggleSidebar = () => {
   showUserMenu.value = false // Close user menu when collapsing
 }
 
+const handleNavClick = (event) => {
+  if (event.target.closest('a')) {
+    emit('close')
+  }
+}
+
 const toggleUserMenu = () => {
   if (!isCollapsed.value) {
     showUserMenu.value = !showUserMenu.value
@@ -213,9 +221,8 @@ const navigateToProfile = () => {
 }
 
 const openSettings = () => {
-  // Add settings logic here
   showUserMenu.value = false
-  console.log('Open settings')
+  emit('openSettings')
 }
 
 const handleLogout = async () => {
@@ -261,80 +268,71 @@ onUnmounted(() => {
   top: 0;
   bottom: 0;
   z-index: 1000;
-  transition: width 0.3s ease;
   width: 260px;
+  transition: width 0.3s ease, transform 0.25s ease;
+  background: transparent;
 }
 
 .sidebar-wrapper.collapsed {
-  width: 70px;
+  width: 80px;
 }
 
-/* Toggle Button */
 .sidebar-toggle {
   position: absolute;
-  top: 20px;
-  right: -12px;
-  width: 24px;
-  height: 24px;
-  background: rgb(255, 255, 255);
-  border: 1px solid #e2e8f0;
+  top: 22px;
+  right: -14px;
+  width: 28px;
+  height: 28px;
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(16, 185, 129, 0.2);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   z-index: 1002;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  transition: all 0.3s ease;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.14);
+  transition: transform 0.25s ease, background 0.25s ease;
 }
 
 .sidebar-toggle:hover {
-  background: #004b1d;
-  border-color: #cbd5e1;
-  transform: scale(1.1);
+  transform: scale(1.05);
+  background: white;
 }
 
 .toggle-icon {
   width: 16px;
   height: 16px;
-  color: #64748b;
+  color: #0f172a;
 }
 
-/* Sidebar */
 .sidebar {
   height: 100%;
   width: 100%;
-  background: linear-gradient(135deg, #10b981, #002c0f);
-  border-right: 1px solid #e2e8f0;
+  background: linear-gradient(180deg, rgba(6, 78, 59, 0.98), rgba(8, 86, 63, 0.96));
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
   display: flex;
   flex-direction: column;
-  padding: 20px 0;
+  padding: 24px 16px;
   transition: all 0.3s ease;
-  position: relative;
   overflow: hidden;
 }
 
-/* Logo Section */
 .logo-section {
-  padding: 0 20px 30px 20px;
-  margin-bottom: 20px;
-  border-bottom: 1px solid #f1f5f9;
+  padding-bottom: 28px;
+  margin-bottom: 24px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   cursor: pointer;
-  transition: padding 0.3s ease;
-}
-
-.sidebar.collapsed .logo-section {
-  padding: 0 15px 30px 15px;
 }
 
 .logo-title {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: #ffffff;
+  font-size: 1.45rem;
+  font-weight: 800;
+  color: #f8fafc;
   line-height: 1.2;
-  transition: all 0.3s ease;
   white-space: nowrap;
   opacity: 1;
+  letter-spacing: -0.03em;
 }
 
 .logo-title.collapsed {
@@ -344,46 +342,40 @@ onUnmounted(() => {
 }
 
 .logo-highlight {
-  color: #f7f7f7;
+  color: rgba(255, 255, 255, 0.85);
 }
 
-/* Navigation Links */
 .nav-links {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  padding: 0 15px;
+  gap: 10px;
+  padding: 0 8px;
   overflow-y: auto;
 }
 
 .nav-link {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 12px 15px;
-  color: #ffffff;
-  font-weight: 500;
+  gap: 14px;
+  padding: 14px 16px;
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 600;
   text-decoration: none;
-  border-radius: 10px;
-  transition: all 0.2s ease;
+  border-radius: 18px;
+  transition: all 0.25s ease;
   position: relative;
   white-space: nowrap;
 }
 
 .nav-link:hover {
-  color: #10b981;
-  background: rgba(16, 185, 129, 0.05);
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
 }
 
 .nav-link.active {
+  background: rgba(255, 255, 255, 0.18);
   color: #ffffff;
-  background: rgba(255, 255, 255, 0.1);
-}
-
-.nav-link.active .nav-indicator {
-  opacity: 1;
-  transform: scaleX(1);
 }
 
 .nav-icon {
@@ -393,7 +385,7 @@ onUnmounted(() => {
 }
 
 .nav-text {
-  transition: opacity 0.3s ease;
+  transition: opacity 0.25s ease;
   opacity: 1;
 }
 
@@ -405,21 +397,25 @@ onUnmounted(() => {
 
 .nav-indicator {
   position: absolute;
-  right: 15px;
+  right: 14px;
   width: 4px;
   height: 20px;
-  background: linear-gradient(180deg, #10b981, #34d399);
-  border-radius: 2px;
+  background: linear-gradient(180deg, #34d399, #10b981);
+  border-radius: 999px;
   opacity: 0;
-  transition: all 0.3s ease;
+  transition: all 0.25s ease;
   transform: scaleX(0);
 }
 
-.sidebar.collapsed .nav-indicator {
-  right: 8px;
+.nav-link.active .nav-indicator {
+  opacity: 1;
+  transform: scaleX(1);
 }
 
-/* Tooltip for collapsed state */
+.sidebar.collapsed .nav-indicator {
+  right: 10px;
+}
+
 .nav-link[title] {
   position: relative;
 }
@@ -430,18 +426,18 @@ onUnmounted(() => {
   left: calc(100% + 10px);
   top: 50%;
   transform: translateY(-50%);
-  background: #1e293b;
+  background: rgba(15, 23, 42, 0.95);
   color: white;
-  padding: 6px 12px;
-  border-radius: 6px;
-  font-size: 0.75rem;
+  padding: 8px 14px;
+  border-radius: 12px;
+  font-size: 0.8rem;
   white-space: nowrap;
   opacity: 0;
   visibility: hidden;
   transition: all 0.2s ease;
   z-index: 1001;
   pointer-events: none;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.18);
 }
 
 .nav-link[title]:hover::after {
@@ -449,46 +445,39 @@ onUnmounted(() => {
   visibility: visible;
 }
 
-/* User Section */
 .user-section {
   margin-top: auto;
-  padding: 15px;
-  border-top: 1px solid #f1f5f9;
+  padding: 18px 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
   display: flex;
   align-items: center;
   gap: 12px;
   cursor: pointer;
   position: relative;
-  transition: padding 0.3s ease;
 }
 
 .sidebar.collapsed .user-section {
-  padding: 15px 10px;
+  padding: 18px 10px;
   justify-content: center;
-}
-
-.user-avatar {
-  flex-shrink: 0;
 }
 
 .avatar-initials {
-  width: 40px;
-  height: 40px;
-  background: linear-gradient(135deg, #23ff52, #34d399);
+  width: 44px;
+  height: 44px;
+  background: linear-gradient(135deg, #22c55e, #16a34a);
   color: white;
-  border-radius: 10px;
+  border-radius: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: 600;
-  font-size: 0.875rem;
+  font-weight: 700;
+  font-size: 0.95rem;
 }
 
 .user-info {
   flex: 1;
   min-width: 0;
-  transition: opacity 0.3s ease;
-  opacity: 1;
+  transition: opacity 0.25s ease;
 }
 
 .user-info.collapsed {
@@ -498,9 +487,9 @@ onUnmounted(() => {
 }
 
 .user-name {
-  font-weight: 600;
-  color: #68ff89;
-  font-size: 0.875rem;
+  font-weight: 700;
+  color: #ecffef;
+  font-size: 0.95rem;
   line-height: 1.2;
   white-space: nowrap;
   overflow: hidden;
@@ -509,7 +498,7 @@ onUnmounted(() => {
 
 .user-email {
   font-size: 0.75rem;
-  color: #ffffff;
+  color: rgba(255, 255, 255, 0.72);
   line-height: 1.2;
   white-space: nowrap;
   overflow: hidden;
@@ -519,7 +508,7 @@ onUnmounted(() => {
 .chevron-icon {
   width: 16px;
   height: 16px;
-  color: #ffffff;
+  color: rgba(255, 255, 255, 0.9);
   transition: transform 0.2s ease;
   flex-shrink: 0;
 }
@@ -532,16 +521,15 @@ onUnmounted(() => {
   display: none;
 }
 
-/* User Dropdown */
 .user-dropdown {
   position: absolute;
-  bottom: 70px;
-  left: 15px;
-  right: 15px;
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
-  border: 1px solid rgba(0, 0, 0, 0.08);
+  bottom: 72px;
+  left: 14px;
+  right: 14px;
+  background: #ffffff;
+  border-radius: 18px;
+  box-shadow: 0 20px 45px rgba(15, 23, 42, 0.16);
+  border: 1px solid rgba(15, 23, 42, 0.08);
   z-index: 1001;
   overflow: hidden;
 }
@@ -550,21 +538,21 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 12px 16px;
-  color: #475569;
-  font-weight: 500;
+  padding: 14px 18px;
+  color: #344054;
+  font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: background 0.2s ease, color 0.2s ease;
 }
 
 .dropdown-item:hover {
-  background: rgba(16, 185, 129, 0.05);
-  color: #10b981;
+  background: rgba(16, 185, 129, 0.08);
+  color: #0f172a;
 }
 
 .dropdown-item.logout:hover {
-  background: rgba(239, 68, 68, 0.05);
-  color: #dc2626;
+  background: rgba(239, 68, 68, 0.08);
+  color: #b91c1c;
 }
 
 .dropdown-icon {
@@ -573,9 +561,8 @@ onUnmounted(() => {
   flex-shrink: 0;
 }
 
-/* Scrollbar Styling */
 .nav-links::-webkit-scrollbar {
-  width: 4px;
+  width: 6px;
 }
 
 .nav-links::-webkit-scrollbar-track {
@@ -583,15 +570,14 @@ onUnmounted(() => {
 }
 
 .nav-links::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.16);
+  border-radius: 999px;
 }
 
 .nav-links::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: rgba(255, 255, 255, 0.28);
 }
 
-/* Responsive Design */
 @media (max-width: 768px) {
   .sidebar-wrapper {
     position: fixed;
@@ -601,16 +587,15 @@ onUnmounted(() => {
     width: 260px;
     transform: translateX(-100%);
     transition: transform 0.25s ease;
-    box-shadow: none;
   }
 
   .sidebar-wrapper.open {
     transform: translateX(0);
-    box-shadow: 4px 0 20px rgba(0, 0, 0, 0.1);
+    box-shadow: 4px 0 34px rgba(15, 23, 42, 0.18);
   }
 
   .sidebar-wrapper.collapsed {
-    width: 70px;
+    width: 80px;
   }
 
   .sidebar-wrapper.open.collapsed {
@@ -619,21 +604,6 @@ onUnmounted(() => {
 
   .sidebar {
     height: 100vh;
-  }
-  
-  .logo-title:not(.collapsed) {
-    opacity: 1;
-    width: auto;
-  }
-  
-  .nav-text:not(.collapsed) {
-    opacity: 1;
-    width: auto;
-  }
-  
-  .user-info:not(.collapsed) {
-    opacity: 1;
-    width: auto;
   }
 }
 </style>

@@ -33,6 +33,7 @@
         v-if="showNavbar && (!isMobile || isSidebarOpen)" 
         :is-open="isSidebarOpen"
         @close="closeSidebar"
+        @openSettings="showSettings = true"
       />
 
       <!-- Page Content -->
@@ -40,6 +41,7 @@
         <router-view />
       </main>
       <Chatbot v-if="showNavbar" />
+      <SettingsModal v-if="showSettings" @close="showSettings = false" />
     </div>
   </div>
 </template>
@@ -49,6 +51,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useAuthStore } from './store/auth'
 import Navbar from './components/Navbar.vue'
+import SettingsModal from './components/SettingsModal.vue'
 import { initializeBackendCheck } from './utils/backend-check'
 import Chatbot from './components/Chatbot.vue' // Add this import
 import { useLanguage } from './store/language'
@@ -58,6 +61,7 @@ const authStore = useAuthStore()
 const initialLoading = ref(true)
 const isAppReady = ref(false)
 const isSidebarOpen = ref(false)
+const showSettings = ref(false)
 const isMobile = ref(window.innerWidth < 768)
 const { setLanguage } = useLanguage()
 
@@ -107,12 +111,12 @@ const closeSidebar = () => {
 
 <style scoped>
 .spinner {
-  width: 40px;
-  height: 40px;
-  border: 3px solid #e2e8f0;
-  border-top-color: #10b981;
+  width: 44px;
+  height: 44px;
+  border: 4px solid rgba(16, 185, 129, 0.18);
+  border-top-color: rgba(16, 185, 129, 1);
   border-radius: 50%;
-  animation: spin 1s linear infinite;
+  animation: spin 0.85s linear infinite;
   margin: 0 auto;
 }
 
@@ -120,54 +124,47 @@ const closeSidebar = () => {
   to { transform: rotate(360deg); }
 }
 
-/* Hamburger Button */
 .hamburger-btn {
   position: fixed;
-  top: 20px;
-  left: 20px;
-  z-index: 100;
-  width: 44px;
-  height: 44px;
-  background: white;
-  border: 1px solid #e2e8f0;
-  border-radius: 10px;
+  top: 22px;
+  left: 22px;
+  z-index: 1100;
+  width: 52px;
+  height: 52px;
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(16, 185, 129, 0.18);
+  border-radius: 18px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  transition: all 0.3s ease;
+  box-shadow: 0 20px 50px rgba(15, 23, 42, 0.12);
+  transition: transform 0.25s ease, background 0.25s ease;
 }
 
 .hamburger-btn:hover {
-  background: #f8fafc;
-  border-color: #cbd5e1;
-  transform: translateY(-1px);
+  transform: translateY(-2px);
+  background: white;
 }
 
 .hamburger-btn svg {
   width: 24px;
   height: 24px;
-  color: #475569;
+  color: #0f172a;
 }
 
-/* Hide hamburger on desktop when sidebar is open */
 @media (min-width: 768px) {
   .hamburger-btn {
     display: none;
   }
 }
 
-/* Sidebar Overlay */
 .sidebar-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  inset: 0;
+  background: rgba(15, 23, 42, 0.55);
   z-index: 998;
-  backdrop-filter: blur(2px);
+  backdrop-filter: blur(6px);
   animation: fadeIn 0.3s ease;
 }
 
@@ -176,28 +173,25 @@ const closeSidebar = () => {
   to { opacity: 1; }
 }
 
-/* Main Content */
 .main-content {
   min-height: 100vh;
   position: relative;
   z-index: 1;
-  padding: 20px 16px 24px;
-  transition: all 0.3s ease;
+  padding: 24px 20px 28px;
+  transition: padding-left 0.3s ease, transform 0.3s ease;
   width: 100%;
   max-width: 100%;
 }
 
-/* When sidebar is visible, add left padding on desktop */
 @media (min-width: 768px) {
   .main-content.with-sidebar {
-    padding-left: 70px; /* Same as collapsed sidebar width */
-    transition: padding-left 0.3s ease;
+    padding-left: 70px;
   }
 }
 
 @media (max-width: 767px) {
   .main-content {
-    padding: 16px 12px 24px;
+    padding: 18px 14px 24px;
   }
 }
 </style>

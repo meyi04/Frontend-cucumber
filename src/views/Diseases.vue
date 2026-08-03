@@ -392,12 +392,12 @@ const goToUpload = () => {
 
 <style scoped>
 .diseases-page {
-  height: calc(100vh - 20px); /* Full viewport height minus some padding */
-  margin-top: 5px;
-  margin-left: 10px;
+  min-height: 100vh;
+  margin: 5px auto;
+  max-width: 1200px;
   background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
   position: relative;
-  overflow: hidden; /* No page scrollbar */
+  overflow: hidden;
   border-radius: 20px;
 }
 
@@ -441,11 +441,14 @@ const goToUpload = () => {
 }
 
 .diseases-content {
-  height: 100%;
-  overflow-y: auto; /* Only content inside scrolls */
-  padding: 20px 25px;
+  min-height: 100%;
+  overflow-y: auto;
+  padding: 24px 20px;
   position: relative;
   z-index: 2;
+  width: 100%;
+  max-width: 1160px;
+  margin: 0 auto;
 }
 
 /* Hide scrollbar but keep functionality */
@@ -1040,6 +1043,16 @@ const goToUpload = () => {
 }
 
 @media (max-width: 768px) {
+  .diseases-page {
+    margin: 5px 10px;
+    border-radius: 16px;
+  }
+
+  .diseases-content {
+    padding: 16px;
+    max-width: 100%;
+  }
+
   .diseases-header {
     flex-direction: column;
   }
@@ -1050,6 +1063,23 @@ const goToUpload = () => {
   
   .filter-buttons {
     justify-content: flex-start;
+  }
+
+  .page-title {
+    font-size: 1.5rem;
+  }
+
+  .quick-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .disease-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .results-info {
+    flex-direction: column;
+    gap: 8px;
   }
 }
 </style>

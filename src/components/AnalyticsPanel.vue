@@ -330,7 +330,8 @@ const barHeight = (count) => {
 
 const formatTime = (timestamp) => {
   try {
-    const date = new Date(timestamp)
+    if (!timestamp) return 'Just now'
+    const date = timestamp?.toDate ? timestamp.toDate() : new Date(timestamp)
     const now = new Date()
     const diffMs = now - date
     const diffMins = Math.floor(diffMs / 60000)
@@ -341,7 +342,64 @@ const formatTime = (timestamp) => {
     if (diffHours < 24) return `${diffHours}h ago`
     if (diffDays < 7) return `${diffDays}d ago`
     return date.toLocaleDateString()
-  } catch { return timestamp }
+  } catch { return timestamp || 'Just now' }
+}
+
+const normalizeTimestamp = (value) => {
+  if (!value) return null
+  if (value?.toDate) return value.toDate()
+  if (value instanceof Date) return value
+  if (typeof value === 'number') return new Date(value)
+  if (typeof value === 'string') {
+    const parsed = new Date(value)
+    return Number.isNaN(parsed.getTime()) ? null : parsed
+  }
+  return null
+}
+
+const normalizeAnalysisItem = (item, fallbackId = '') => {
+  const createdAt = normalizeTimestamp(item.created_at || item.createdAt || item.timestamp || item.processedAt || item.uploadedAt)
+  const confidenceValue = typeof item.confidence === 'number'
+    ? item.confidence
+    : (typeof item.confidence === 'string' ? parseFloat(item.confidence) : 0)
+  const percentageConfidence = Number.isFinite(confidenceValue)
+    ? (confidenceValue > 1 ? confidenceValue : confidenceValue * 100)
+    : 0
+  const status = String(item.status || item.result || item.disease || 'completed').toLowerCase()
+  const displayTitle = item.fileName || item.filename || item.name || `Analysis ${fallbackId.slice(0, 8)}`
+
+  return {
+    id: item.id || fallbackId,
+    name: displayTitle,
+    title: displayTitle,
+    created_at: createdAt ? createdAt.toISOString() : new Date().toISOString(),
+    status: status === 'healthy' ? 'healthy' : (status === 'infected' ? 'infected' : (status || 'completed')),
+    processing_time: item.processing_time || item.processingTime || item.duration || null,
+    confidence: Math.round(percentageConfidence),
+    disease: item.disease || 'Unknown',
+    fileName: item.fileName || item.filename || item.name || displayTitle
+  }
+}
+
+const readLocalRecentAnalyses = () => {
+  try {
+    const storageValue = localStorage.getItem('cucumber_recent_uploads')
+    if (!storageValue) return []
+    const parsed = JSON.parse(storageValue)
+    if (!Array.isArray(parsed)) return []
+    return parsed.map((entry, index) => normalizeAnalysisItem({
+      id: entry.id || `local-${index}`,
+      fileName: entry.name || entry.fileName || entry.filename,
+      status: entry.status,
+      disease: entry.disease,
+      confidence: entry.confidence,
+      processing_time: entry.processingTime || entry.processing_time,
+      timestamp: entry.timestamp || entry.date || new Date().toISOString()
+    }, entry.id || `local-${index}`))
+  } catch (error) {
+    console.warn('Failed to load local recent analyses', error)
+    return []
+  }
 }
 
 // Computed properties
@@ -477,8 +535,8 @@ const performanceMetrics = computed(() => [
 ])
 
 const recentActivity = computed(() => {
-  return recent.value.slice(0, 5).map(proc => ({
-    title: proc.name || 'Image Analysis Process',
+  return recent.value.slice(0, 5).map((proc) => ({
+    title: proc.title || proc.name || 'Image Analysis Process',
     time: proc.created_at,
     duration: proc.processing_time ? `${proc.processing_time}s` : null,
     status: proc.status || 'completed'
@@ -531,7 +589,7 @@ const computeAnalytics = (docs, days = 7) => {
   const daysArr = Array.from({ length: days }).map((_, i) => {
     const d = new Date(now)
     d.setDate(now.getDate() - (days - 1 - i))
-    const iso = d.toISOString().slice(0,10)
+    const iso = d.toISOString().slice(0, 10)
     return { date: iso, count: 0 }
   })
 
@@ -539,22 +597,26 @@ const computeAnalytics = (docs, days = 7) => {
   let procSum = 0
   let procCount = 0
 
-  docs.forEach(d => {
-    const created = d.created_at?.toDate ? d.created_at.toDate() : new Date(d.created_at || d.createdAt || Date.now())
-    const iso = created.toISOString().slice(0,10)
-    const day = daysArr.find(x => x.date === iso)
+  docs.forEach((d) => {
+    const created = normalizeTimestamp(d.created_at || d.createdAt || d.timestamp || d.processedAt || d.uploadedAt)
+    const iso = created ? created.toISOString().slice(0, 10) : null
+    const day = iso ? daysArr.find((x) => x.date === iso) : null
     if (day) day.count += 1
 
-    const st = d.status || 'done'
-    statusMap[st] = (statusMap[st] || 0) + 1
+    const st = d.status || d.result || d.disease || 'completed'
+    const normalizedStatus = String(st).toLowerCase()
+    statusMap[normalizedStatus] = (statusMap[normalizedStatus] || 0) + 1
 
     const ptime = d.processing_time || d.processingTime || d.duration || null
-    const pnum = typeof ptime === 'number' ? ptime : (ptime && !isNaN(Number(ptime)) ? Number(ptime) : null)
-    if (pnum !== null) { procSum += pnum; procCount += 1 }
+    const pnum = typeof ptime === 'number' ? ptime : (ptime && !Number.isNaN(Number(ptime)) ? Number(ptime) : null)
+    if (pnum !== null) {
+      procSum += pnum
+      procCount += 1
+    }
   })
 
   perDay.value = daysArr
-  total.value = daysArr.reduce((s,x) => s + x.count, 0)
+  total.value = daysArr.reduce((sum, entry) => sum + entry.count, 0)
   statusCounts.value = statusMap
   avgProcessing.value = procCount > 0 ? +(procSum / procCount).toFixed(2) : null
 }
@@ -562,70 +624,66 @@ const computeAnalytics = (docs, days = 7) => {
 const loadAnalyticsFromFirestore = async (user) => {
   loading.value = true
   loadError.value = ''
+
   try {
     if (!user) {
       signedIn.value = false
-      loading.value = false
+      const localItems = readLocalRecentAnalyses()
+      recent.value = localItems.slice(0, 6)
+      computeAnalytics(localItems, windowDays.value)
       return
     }
+
     signedIn.value = true
 
     const colName = 'uploads'
-    const tryQueries = []
+    const queries = []
     if (user.email) {
-      tryQueries.push(query(collection(db, colName), where('ownerEmail', '==', user.email), orderBy('created_at', 'desc')))
-      tryQueries.push(query(collection(db, colName), where('userEmail', '==', user.email), orderBy('created_at', 'desc')))
-      tryQueries.push(query(collection(db, colName), where('email', '==', user.email), orderBy('created_at', 'desc')))
+      queries.push(query(collection(db, colName), where('userEmail', '==', user.email)))
+      queries.push(query(collection(db, colName), where('ownerEmail', '==', user.email)))
+      queries.push(query(collection(db, colName), where('email', '==', user.email)))
     }
     if (user.uid) {
-      tryQueries.push(query(collection(db, colName), where('ownerUid', '==', user.uid), orderBy('created_at', 'desc')))
-      tryQueries.push(query(collection(db, colName), where('uid', '==', user.uid), orderBy('created_at', 'desc')))
+      queries.push(query(collection(db, colName), where('userId', '==', user.uid)))
+      queries.push(query(collection(db, colName), where('ownerUid', '==', user.uid)))
+      queries.push(query(collection(db, colName), where('uid', '==', user.uid)))
     }
 
-    let snap = null
-    let docs = []
-    
-    for (const q of tryQueries) {
-      try {
-        const s = await getDocs(q)
-        if (s && s.size > 0) { snap = s; break }
-      } catch (e) {}
-    }
+    const snapshots = await Promise.all(
+      queries.map((q) => getDocs(q).catch(() => ({ empty: true, forEach: () => {} })))
+    )
 
-    if (!snap) {
-      try {
-        const s = await getDocs(collection(db, colName))
-        snap = s
-      } catch (e) {
-        throw e
-      }
-    }
+    const allDocs = []
+    const seen = new Set()
 
-    docs = snap.docs.map(d => ({ id: d.id, ...d.data() }))
-
-    if (user && docs.length > 0) {
-      const possibleMatches = docs.filter(doc => {
-        try {
-          return Object.values(doc).some(v => v === user.email || v === user.uid)
-        } catch (e) { return false }
+    snapshots.forEach((snapshot) => {
+      if (!snapshot || snapshot.empty) return
+      snapshot.forEach((doc) => {
+        if (seen.has(doc.id)) return
+        seen.add(doc.id)
+        allDocs.push({ id: doc.id, ...doc.data() })
       })
-      if (possibleMatches.length > 0) {
-        docs = possibleMatches
-      }
+    })
+
+    if (allDocs.length === 0) {
+      const localItems = readLocalRecentAnalyses()
+      recent.value = localItems.slice(0, 6)
+      computeAnalytics(localItems, windowDays.value)
+      return
     }
 
-    recent.value = docs.slice(0, 6).map(d => ({
-      id: d.id,
-      name: d.name || `Process ${d.id}`,
-      created_at: d.created_at?.toDate ? d.created_at.toDate().toISOString() : (d.created_at || new Date().toISOString()),
-      status: d.status || 'done',
-      processing_time: d.processing_time || d.processingTime || d.duration || null
-    }))
+    const formattedDocs = allDocs
+      .map((doc) => normalizeAnalysisItem(doc, doc.id))
+      .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
 
-    computeAnalytics(docs, windowDays.value)
+    recent.value = formattedDocs.slice(0, 6)
+    computeAnalytics(formattedDocs, windowDays.value)
   } catch (e) {
     console.error('Firestore analytics load failed', e)
     loadError.value = 'Failed to load analytics from database.'
+    const localItems = readLocalRecentAnalyses()
+    recent.value = localItems.slice(0, 6)
+    computeAnalytics(localItems, windowDays.value)
   } finally {
     loading.value = false
   }

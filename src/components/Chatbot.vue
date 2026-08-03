@@ -495,7 +495,7 @@ watch(messages, () => {
 .chatbot-avatar {
   width: 48px;
   height: 48px;
-  background: white;
+  background: rgb(255, 255, 255);
   border-radius: 12px;
   display: flex;
   align-items: center;

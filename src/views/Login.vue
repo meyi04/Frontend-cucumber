@@ -395,7 +395,8 @@ const resendVerification = async () => {
   line-height: 1.2;
 }
 
-.logo-section {
+.logo-section,
+.logo-section-large {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -844,12 +845,27 @@ input.error {
 @media (max-width: 640px) {
   .login-card {
     padding: 32px 24px;
+    max-width: 100%;
+    width: 100%;
   }
   
-  .logo-section {
+  .logo-section,
+  .logo-section-large {
     flex-direction: column;
     text-align: center;
     gap: 8px;
+  }
+
+  .logo-text-center h1 {
+    font-size: 2rem;
+  }
+
+  .login-title {
+    font-size: 1.5rem;
+  }
+
+  .login-subtitle {
+    font-size: 0.95rem;
   }
   
   .form-options {

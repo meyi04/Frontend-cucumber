@@ -44,26 +44,33 @@
             <div v-if="showNotifications" class="notification-dropdown">
               <div class="dropdown-header">
                 <h4>{{ t('notifications') }}</h4>
-                <button @click.stop="markAllAsRead" class="mark-read">{{ t('markAllRead') }}</button>
+                <button @click.stop="markAllAsRead" class="mark-read" :disabled="notificationCount === 0">
+                  {{ t('markAllRead') }}
+                </button>
               </div>
               <div class="notification-list">
-                <div v-for="notif in notifications" :key="notif.id" class="notification-item" :class="{ 'unread': !notif.read }">
-                  <div class="notif-icon" :class="notif.type">
-                    <svg v-if="notif.type === 'success'" viewBox="0 0 24 24" fill="none">
-                      <path d="M20 6L9 17L4 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                    </svg>
-                    <svg v-else-if="notif.type === 'warning'" viewBox="0 0 24 24" fill="none">
-                      <path d="M12 9V13M12 17H12.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                    </svg>
-                    <svg v-else viewBox="0 0 24 24" fill="none">
-                      <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="currentColor" stroke-width="1.5"/>
-                    </svg>
+                <template v-if="unreadNotifications.length > 0">
+                  <div v-for="notif in unreadNotifications" :key="notif.id" class="notification-item unread">
+                    <div class="notif-icon" :class="notif.type">
+                      <svg v-if="notif.type === 'success'" viewBox="0 0 24 24" fill="none">
+                        <path d="M20 6L9 17L4 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                      </svg>
+                      <svg v-else-if="notif.type === 'warning'" viewBox="0 0 24 24" fill="none">
+                        <path d="M12 9V13M12 17H12.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                      </svg>
+                      <svg v-else viewBox="0 0 24 24" fill="none">
+                        <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="currentColor" stroke-width="1.5"/>
+                      </svg>
+                    </div>
+                    <div class="notif-content">
+                      <p class="notif-message">{{ notif.message }}</p>
+                      <span class="notif-time">{{ notif.time }}</span>
+                    </div>
+                    <button class="notif-mark-read" @click.stop="markAsRead(notif.id)">✓</button>
                   </div>
-                  <div class="notif-content">
-                    <p class="notif-message">{{ notif.message }}</p>
-                    <span class="notif-time">{{ notif.time }}</span>
-                  </div>
-                  <button v-if="!notif.read" class="notif-mark-read" @click.stop="markAsRead(notif.id)">✓</button>
+                </template>
+                <div v-else class="notification-empty">
+                  <p>{{ t('noNewNotifications') || 'No new notifications' }}</p>
                 </div>
               </div>
               <div class="dropdown-footer">
@@ -337,7 +344,6 @@ const animatedStats = ref([0, 0, 0, 0])
 const isSystemOnline = ref(true)
 const lastUpdate = ref('No analyses yet')
 const avgProcessingTime = ref('0.0 seconds')
-const notificationCount = ref(3)
 const showNotifications = ref(false)
 const showUserMenu = ref(false)
 const selectedTimeRange = ref('7D')
@@ -367,6 +373,9 @@ const notifications = ref([
     read: true
   }
 ])
+
+const notificationCount = computed(() => notifications.value.filter(n => !n.read).length)
+const unreadNotifications = computed(() => notifications.value.filter(n => !n.read))
 
 let notificationsUnsub = null
 
@@ -447,13 +456,11 @@ const markAsRead = (id) => {
   const notif = notifications.value.find(n => n.id === id)
   if (notif) {
     notif.read = true
-    notificationCount.value = notifications.value.filter(n => !n.read).length
   }
 }
 
 const markAllAsRead = () => {
   notifications.value.forEach(n => n.read = true)
-  notificationCount.value = 0
 }
 
 const viewAllNotifications = () => {
@@ -766,21 +773,21 @@ onMounted(() => {
 <style scoped>
 .dashboard {
   min-height: 100vh;
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  background: radial-gradient(circle at top left, rgba(16, 185, 129, 0.14), transparent 28%),
+              radial-gradient(circle at bottom right, rgba(59, 130, 246, 0.10), transparent 38%),
+              #f4f7f6;
   padding: 24px;
   position: relative;
   overflow-x: hidden;
-  margin-top: 0;
 }
 
-/* Dashboard Header */
 .dashboard-header {
-  background: white;
-  border-radius: 24px;
-  padding: 24px 32px;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 28px;
+  padding: 32px;
   margin-bottom: 32px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.02);
-  border: 1px solid rgba(16, 185, 129, 0.1);
+  box-shadow: 0 28px 80px rgba(15, 23, 42, 0.08);
+  border: 1px solid rgba(16, 185, 129, 0.12);
   position: relative;
   overflow: hidden;
 }
@@ -806,10 +813,10 @@ onMounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 18px;
   margin-bottom: 24px;
 }
 
-/* Welcome Section */
 .welcome-section {
   position: relative;
 }
@@ -817,53 +824,48 @@ onMounted(() => {
 .welcome-title {
   display: flex;
   flex-direction: column;
-  margin-bottom: 4px;
+  margin-bottom: 8px;
 }
 
 .greeting {
-  font-size: 0.875rem;
-  font-weight: 500;
+  font-size: 0.85rem;
+  font-weight: 700;
   color: #64748b;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin-bottom: 2px;
+  letter-spacing: 0.16em;
+  margin-bottom: 6px;
 }
 
 .username {
-  font-size: 1.75rem;
-  font-weight: 700;
-  background: linear-gradient(135deg, #1e293b, #10b981);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  line-height: 1.2;
+  font-size: 2rem;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  color: #0f172a;
 }
 
 .welcome-subtitle {
   color: #64748b;
-  font-size: 0.875rem;
+  font-size: 0.95rem;
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
 }
 
 .welcome-subtitle::before {
   content: '✨';
-  font-size: 1rem;
 }
 
-/* Header Right Section */
 .header-right {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 14px;
+  flex-wrap: wrap;
 }
 
-/* Date Display */
 .date-display {
   background: #f8fafc;
-  border-radius: 16px;
-  padding: 8px 16px;
+  border-radius: 18px;
+  padding: 10px 18px;
   border: 1px solid #e2e8f0;
   transition: all 0.2s ease;
   cursor: pointer;
@@ -872,29 +874,24 @@ onMounted(() => {
 .date-display:hover {
   background: white;
   border-color: #10b981;
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.1);
+  box-shadow: 0 8px 24px rgba(16, 185, 129, 0.08);
 }
 
 .date-card {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
 }
 
 .date-icon {
-  width: 36px;
-  height: 36px;
-  background: rgba(16, 185, 129, 0.1);
-  border-radius: 10px;
+  width: 38px;
+  height: 38px;
+  background: rgba(16, 185, 129, 0.12);
+  border-radius: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
   color: #10b981;
-}
-
-.date-icon svg {
-  width: 18px;
-  height: 18px;
 }
 
 .date-info {
@@ -903,26 +900,25 @@ onMounted(() => {
 }
 
 .date-day {
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   color: #64748b;
-  font-weight: 500;
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.18em;
 }
 
 .date-full {
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: #1e293b;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #0f172a;
 }
 
-/* Notification Bell */
 .notification-bell {
   position: relative;
-  width: 44px;
-  height: 44px;
+  width: 46px;
+  height: 46px;
   background: #f8fafc;
-  border-radius: 12px;
+  border-radius: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -937,7 +933,7 @@ onMounted(() => {
   color: #10b981;
   border-color: #10b981;
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.15);
+  box-shadow: 0 10px 24px rgba(16, 185, 129, 0.08);
 }
 
 .notification-bell svg {
@@ -947,31 +943,30 @@ onMounted(() => {
 
 .notification-badge {
   position: absolute;
-  top: -5px;
-  right: -5px;
+  top: -6px;
+  right: -6px;
   background: #ef4444;
   color: white;
-  font-size: 0.625rem;
-  font-weight: 600;
+  font-size: 0.63rem;
+  font-weight: 700;
   min-width: 18px;
   height: 18px;
-  border-radius: 9px;
+  border-radius: 999px;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0 4px;
+  padding: 0 5px;
   border: 2px solid white;
 }
 
-/* Notification Dropdown */
 .notification-dropdown {
   position: absolute;
   top: 100%;
   right: 0;
   width: 320px;
   background: white;
-  border-radius: 16px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+  border-radius: 18px;
+  box-shadow: 0 28px 50px rgba(15, 23, 42, 0.14);
   border: 1px solid #e2e8f0;
   margin-top: 8px;
   z-index: 1000;
@@ -982,15 +977,15 @@ onMounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 16px;
+  padding: 18px 16px;
   border-bottom: 1px solid #e2e8f0;
   background: #f8fafc;
 }
 
 .dropdown-header h4 {
   font-size: 1rem;
-  font-weight: 600;
-  color: #1e293b;
+  font-weight: 700;
+  color: #0f172a;
   margin: 0;
 }
 
@@ -998,16 +993,16 @@ onMounted(() => {
   background: none;
   border: none;
   color: #10b981;
-  font-size: 0.75rem;
-  font-weight: 500;
+  font-size: 0.78rem;
+  font-weight: 700;
   cursor: pointer;
-  padding: 4px 8px;
-  border-radius: 6px;
-  transition: all 0.2s ease;
+  padding: 8px 10px;
+  border-radius: 12px;
+  transition: background 0.2s ease;
 }
 
 .mark-read:hover {
-  background: rgba(16, 185, 129, 0.1);
+  background: rgba(16, 185, 129, 0.12);
 }
 
 .notification-list {
@@ -1019,7 +1014,7 @@ onMounted(() => {
   display: flex;
   align-items: flex-start;
   gap: 12px;
-  padding: 12px 16px;
+  padding: 14px 16px;
   border-bottom: 1px solid #e2e8f0;
   transition: background 0.2s ease;
   position: relative;
@@ -1030,31 +1025,28 @@ onMounted(() => {
 }
 
 .notification-item.unread {
-  background: rgba(16, 185, 129, 0.05);
+  background: rgba(16, 185, 129, 0.06);
 }
 
-.notif-icon {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
+.notification-empty {
+  padding: 28px 16px;
+  text-align: center;
+  color: #64748b;
+  font-size: 0.95rem;
 }
 
 .notif-icon.success {
-  background: rgba(16, 185, 129, 0.1);
+  background: rgba(16, 185, 129, 0.12);
   color: #10b981;
 }
 
 .notif-icon.warning {
-  background: rgba(245, 158, 11, 0.1);
+  background: rgba(245, 158, 11, 0.12);
   color: #f59e0b;
 }
 
 .notif-icon.info {
-  background: rgba(59, 130, 246, 0.1);
+  background: rgba(59, 130, 246, 0.12);
   color: #3b82f6;
 }
 
@@ -1068,20 +1060,20 @@ onMounted(() => {
 }
 
 .notif-message {
-  font-size: 0.875rem;
-  color: #1e293b;
+  font-size: 0.9rem;
+  color: #0f172a;
   margin-bottom: 4px;
-  line-height: 1.4;
+  line-height: 1.5;
 }
 
 .notif-time {
-  font-size: 0.625rem;
+  font-size: 0.72rem;
   color: #94a3b8;
 }
 
 .notif-mark-read {
-  width: 20px;
-  height: 20px;
+  width: 22px;
+  height: 22px;
   border-radius: 50%;
   background: #10b981;
   color: white;
@@ -1089,10 +1081,10 @@ onMounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.75rem;
+  font-size: 0.78rem;
   cursor: pointer;
   opacity: 0;
-  transition: opacity 0.2s ease;
+  transition: opacity 0.15s ease;
 }
 
 .notification-item:hover .notif-mark-read {
@@ -1100,7 +1092,7 @@ onMounted(() => {
 }
 
 .dropdown-footer {
-  padding: 12px 16px;
+  padding: 14px 16px;
   border-top: 1px solid #e2e8f0;
   text-align: center;
 }
@@ -1109,53 +1101,51 @@ onMounted(() => {
   background: none;
   border: none;
   color: #10b981;
-  font-size: 0.875rem;
-  font-weight: 500;
+  font-size: 0.9rem;
+  font-weight: 700;
   cursor: pointer;
   transition: color 0.2s ease;
 }
 
 .dropdown-footer button:hover {
-  color: #059669;
+  color: #047857;
 }
 
-/* User Avatar */
 .user-avatar {
   position: relative;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: transform 0.2s ease;
 }
 
 .user-avatar:hover {
-  transform: translateY(-2px);
+  transform: translateY(-1px);
 }
 
 .avatar-initials {
   width: 44px;
   height: 44px;
   background: linear-gradient(135deg, #10b981, #059669);
-  border-radius: 12px;
+  border-radius: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
   color: white;
-  font-weight: 600;
+  font-weight: 700;
   font-size: 1rem;
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
-  border: 2px solid white;
+  box-shadow: 0 6px 18px rgba(16, 185, 129, 0.2);
+  border: 2px solid rgba(255, 255, 255, 0.32);
 }
 
-/* User Dropdown */
 .user-dropdown {
   position: absolute;
   top: 100%;
   right: 0;
-  width: 200px;
+  width: 220px;
   background: white;
-  border-radius: 12px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+  border-radius: 18px;
+  box-shadow: 0 28px 55px rgba(15, 23, 42, 0.16);
   border: 1px solid #e2e8f0;
-  margin-top: 8px;
+  margin-top: 10px;
   z-index: 1000;
   overflow: hidden;
 }
@@ -1164,22 +1154,22 @@ onMounted(() => {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 12px 16px;
-  color: #475569;
-  font-size: 0.875rem;
-  font-weight: 500;
+  padding: 14px 18px;
+  color: #334155;
+  font-size: 0.9rem;
+  font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: background 0.2s ease, color 0.2s ease;
 }
 
 .dropdown-item:hover {
-  background: rgba(16, 185, 129, 0.05);
-  color: #10b981;
+  background: rgba(16, 185, 129, 0.08);
+  color: #0f172a;
 }
 
 .dropdown-item.logout:hover {
-  background: rgba(239, 68, 68, 0.05);
-  color: #ef4444;
+  background: rgba(239, 68, 68, 0.08);
+  color: #b91c1c;
 }
 
 .dropdown-item svg {
@@ -1187,11 +1177,10 @@ onMounted(() => {
   height: 18px;
 }
 
-/* Quick Stats Row */
 .quick-stats {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 18px;
   padding-top: 16px;
   border-top: 1px solid #e2e8f0;
 }
@@ -1199,10 +1188,10 @@ onMounted(() => {
 .quick-stat-item {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 12px 16px;
-  background: #f8fafc;
-  border-radius: 16px;
+  gap: 14px;
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 24px;
   transition: all 0.2s ease;
   cursor: pointer;
 }
@@ -1210,42 +1199,41 @@ onMounted(() => {
 .quick-stat-item:hover {
   background: white;
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-  border-color: #10b981;
+  box-shadow: 0 18px 38px rgba(16, 185, 129, 0.1);
 }
 
 .stat-icon {
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
+  width: 46px;
+  height: 46px;
+  border-radius: 16px;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .stat-icon.green {
-  background: rgba(16, 185, 129, 0.1);
+  background: rgba(16, 185, 129, 0.12);
   color: #10b981;
 }
 
 .stat-icon.blue {
-  background: rgba(59, 130, 246, 0.1);
+  background: rgba(59, 130, 246, 0.12);
   color: #3b82f6;
 }
 
 .stat-icon.purple {
-  background: rgba(139, 92, 246, 0.1);
+  background: rgba(139, 92, 246, 0.12);
   color: #8b5cf6;
 }
 
 .stat-icon.orange {
-  background: rgba(245, 158, 11, 0.1);
+  background: rgba(245, 158, 11, 0.12);
   color: #f59e0b;
 }
 
 .stat-icon svg {
-  width: 20px;
-  height: 20px;
+  width: 22px;
+  height: 22px;
 }
 
 .stat-info {
@@ -1254,40 +1242,37 @@ onMounted(() => {
 }
 
 .stat-label {
-  font-size: 0.625rem;
-  font-weight: 600;
+  font-size: 0.72rem;
+  font-weight: 700;
   color: #64748b;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.16em;
 }
 
 .stat-value {
-  font-size: 1rem;
-  font-weight: 700;
-  color: #1e293b;
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #0f172a;
 }
 
-/* Stats Grid */
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   gap: 24px;
   margin-bottom: 32px;
 }
 
-/* System Status Card */
 .system-status-card {
   background: white;
-  border-radius: 20px;
-  padding: 32px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
-  transition: all 0.3s ease;
+  border-radius: 28px;
+  padding: 34px;
+  box-shadow: 0 30px 90px rgba(15, 23, 42, 0.08);
+  transition: transform 0.3s ease;
   margin-bottom: 32px;
 }
 
 .system-status-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.12);
+  transform: translateY(-3px);
 }
 
 .card-header {
@@ -1295,82 +1280,77 @@ onMounted(() => {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 32px;
+  gap: 18px;
 }
 
 .header-content {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 18px;
 }
 
 .status-icon {
-  width: 48px;
-  height: 48px;
+  width: 50px;
+  height: 50px;
   color: #10b981;
   flex-shrink: 0;
 }
 
 .card-title {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: #1e293b;
-  margin-bottom: 4px;
+  font-size: 1.55rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin-bottom: 6px;
 }
 
 .card-subtitle {
-  font-size: 0.875rem;
+  font-size: 0.95rem;
   color: #64748b;
 }
 
 .status-indicator {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 16px;
-  background: #f0fdf4;
-  border-radius: 20px;
-  border: 1px solid #dcfce7;
+  gap: 10px;
+  padding: 12px 18px;
+  background: #ecfdf5;
+  border-radius: 32px;
+  border: 1px solid #d1fae5;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: background 0.2s ease;
 }
 
 .status-indicator:hover {
-  background: #dcfce7;
+  background: #d1fae5;
 }
 
 .indicator-dot {
-  width: 8px;
-  height: 8px;
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
   background: #22c55e;
   animation: pulse 2s infinite;
 }
 
-@keyframes pulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4); }
-  50% { box-shadow: 0 0 0 6px rgba(34, 197, 94, 0); }
-}
-
 .status-text {
-  font-weight: 600;
+  font-weight: 700;
   color: #16a34a;
-  font-size: 0.875rem;
+  font-size: 0.9rem;
 }
 
-/* Status Grid */
 .status-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 18px;
   margin-bottom: 24px;
 }
 
 .status-item {
   background: #f8fafc;
-  border-radius: 16px;
-  padding: 20px;
+  border-radius: 24px;
+  padding: 22px;
   border: 1px solid #e2e8f0;
-  transition: all 0.2s ease;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
   cursor: pointer;
 }
 
@@ -1378,14 +1358,14 @@ onMounted(() => {
   background: white;
   border-color: #10b981;
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.1);
+  box-shadow: 0 16px 35px rgba(16, 185, 129, 0.1);
 }
 
 .status-item-header {
   display: flex;
   align-items: center;
   gap: 12px;
-  margin-bottom: 16px;
+  margin-bottom: 18px;
 }
 
 .item-icon {
@@ -1396,18 +1376,18 @@ onMounted(() => {
 }
 
 .item-label {
-  font-size: 0.875rem;
-  font-weight: 600;
+  font-size: 0.85rem;
+  font-weight: 700;
   color: #475569;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.16em;
 }
 
 .item-value {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: #1e293b;
-  margin-left: 36px;
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin-left: auto;
 }
 
 .status-active {
@@ -1418,7 +1398,6 @@ onMounted(() => {
   color: #3b82f6;
 }
 
-/* System Controls */
 .system-controls {
   display: flex;
   gap: 12px;
@@ -1432,27 +1411,27 @@ onMounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  padding: 12px;
+  gap: 10px;
+  padding: 14px;
   background: #f8fafc;
   border: 1px solid #e2e8f0;
-  border-radius: 12px;
+  border-radius: 18px;
   color: #475569;
-  font-weight: 500;
+  font-weight: 700;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .control-btn:hover:not(:disabled) {
   background: white;
   border-color: #10b981;
-  color: #10b981;
+  color: #0f172a;
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.1);
+  box-shadow: 0 14px 32px rgba(16, 185, 129, 0.08);
 }
 
 .control-btn:disabled {
-  opacity: 0.5;
+  opacity: 0.65;
   cursor: not-allowed;
 }
 
@@ -1461,78 +1440,81 @@ onMounted(() => {
   height: 18px;
 }
 
-/* Responsive Design */
 @media (max-width: 1200px) {
-  .status-grid {
-    grid-template-columns: repeat(2, 1fr);
+  .status-grid,
+  .quick-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
 @media (max-width: 1024px) {
   .quick-stats {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
 @media (max-width: 768px) {
   .dashboard {
-    padding: 16px;
+    padding: 18px;
   }
 
   .dashboard-header {
-    padding: 20px;
+    padding: 26px;
   }
 
   .header-top {
     flex-direction: column;
-    align-items: flex-start;
-    gap: 16px;
+    align-items: stretch;
+    gap: 18px;
   }
 
   .header-right {
     width: 100%;
     justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 14px;
+    align-items: center;
+  }
+
+  .header-right > * {
+    min-width: 0;
   }
 
   .username {
-    font-size: 1.5rem;
+    font-size: 1.65rem;
   }
 
-  .stats-grid {
-    grid-template-columns: 1fr;
-    gap: 16px;
-  }
-
-  .status-grid {
-    grid-template-columns: 1fr;
-  }
-
+  .stats-grid,
+  .status-grid,
   .quick-stats {
     grid-template-columns: 1fr;
   }
 
   .system-controls {
     flex-direction: column;
+    gap: 12px;
   }
 
   .notification-dropdown {
-    width: 280px;
-    right: -70px;
+    width: min(100%, 320px);
+    right: 0;
+    left: auto;
   }
 }
 
 @media (max-width: 640px) {
   .card-header {
     flex-direction: column;
-    gap: 16px;
+    gap: 18px;
   }
-  
+
   .status-indicator {
     align-self: flex-start;
   }
 
   .header-right {
     flex-wrap: wrap;
+    justify-content: space-between;
   }
 
   .date-display {
@@ -1544,8 +1526,9 @@ onMounted(() => {
   }
 
   .notification-dropdown {
-    width: 260px;
-    right: -50px;
+    width: min(100%, 260px);
+    right: 0;
+    left: auto;
   }
 }
 </style> 

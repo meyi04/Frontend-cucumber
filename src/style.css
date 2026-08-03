@@ -1,26 +1,36 @@
 :root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
+  --font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --bg: #f4f7f6;
+  --surface: #ffffff;
+  --surface-soft: #f8fafc;
+  --surface-strong: #edf2f7;
+  --text: #0f172a;
+  --muted: #51606a;
+  --border: #dbe4ea;
+  --primary: #10b981;
+  --primary-strong: #047857;
+  --accent: #3b82f6;
+  --danger: #ef4444;
+  --shadow: 0 24px 60px rgba(15, 23, 42, 0.08);
+  --radius: 24px;
+  color: var(--text);
+  background-color: var(--bg);
+  font-family: var(--font-family);
+  font-size: 16px;
+  line-height: 1.6;
   font-weight: 400;
-
-  color-scheme: light dark;
-  color: #111827;
-  background-color: #f8fafc;
-
-  font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
 a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
+  color: var(--primary);
+  text-decoration: none;
 }
 
 a:hover {
-  color: #535bf2;
+  color: var(--accent);
 }
 
 *,
@@ -29,13 +39,19 @@ a:hover {
   box-sizing: border-box;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
-  background-color: #f8fafc;
-  color: #111827;
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  background: radial-gradient(circle at top left, rgba(16, 185, 129, 0.12), transparent 28%),
+    radial-gradient(circle at bottom right, rgba(59, 130, 246, 0.08), transparent 32%),
+    var(--bg);
+  color: var(--text);
+  font-family: var(--font-family);
 }
 
 img {
@@ -57,38 +73,149 @@ textarea {
 }
 
 button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.7em 1.1em;
-  font-size: 1em;
-  font-weight: 500;
-  background-color: #1a1a1a;
+  border-radius: 16px;
+  border: none;
+  padding: 0.9rem 1.3rem;
+  font-size: 1rem;
+  font-weight: 600;
+  background: linear-gradient(135deg, var(--primary), #34d399);
+  color: white;
   cursor: pointer;
-  transition: border-color 0.25s, transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 18px 40px rgba(16, 185, 129, 0.18);
+  transition: transform 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
 }
 
 button:hover {
   transform: translateY(-1px);
+  box-shadow: 0 22px 48px rgba(16, 185, 129, 0.22);
 }
 
-button:hover {
-  border-color: #646cff;
+button:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 
-button:focus,
 button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
+  outline: 3px solid rgba(16, 185, 129, 0.35);
+  outline-offset: 2px;
 }
 
-.card {
-  padding: 2em;
+.card,
+.panel,
+.surface-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+html.dark-mode {
+  background-color: #0f172a;
+  color: #f8fafc;
+}
+
+html.dark-mode body {
+  background-color: #020617;
+  color: #f8fafc;
+}
+
+html.dark-mode .min-h-screen,
+html.dark-mode .main-content,
+html.dark-mode .upload-container,
+html.dark-mode .diseases-page,
+html.dark-mode .profile-container,
+html.dark-mode .results-panel,
+html.dark-mode .upload-options,
+html.dark-mode .stats-card,
+html.dark-mode .profile-card,
+html.dark-mode .recent-uploads,
+html.dark-mode .backend-warning,
+html.dark-mode .error-message,
+html.dark-mode .info-banner,
+html.dark-mode .user-dropdown,
+html.dark-mode .user-section,
+html.dark-mode .nav-link,
+html.dark-mode .sidebar,
+html.dark-mode .language-switcher,
+html.dark-mode .settings-panel {
+  background: #111827 !important;
+  color: #e2e8f0 !important;
+  border-color: #334155 !important;
+}
+
+html.dark-mode .nav-text,
+html.dark-mode .user-name,
+html.dark-mode .user-email,
+html.dark-mode .profile-title,
+html.dark-mode .section-title,
+html.dark-mode h1,
+html.dark-mode h2,
+html.dark-mode h3,
+html.dark-mode p,
+html.dark-mode span,
+html.dark-mode label {
+  color: #e2e8f0 !important;
+}
+
+html.dark-mode .option-item,
+html.dark-mode .lang-option {
+  background: #1f2937 !important;
+}
+
+html.dark-mode .primary-btn {
+  background: linear-gradient(135deg, #22c55e, #38bdf8) !important;
+}
+
+html.dark-mode button,
+html.dark-mode input,
+html.dark-mode select,
+html.dark-mode textarea {
+  color: #e2e8f0 !important;
+}
+
+body.font-large {
+  font-size: 1.05rem;
+}
+
+html.compact-layout .main-content,
+html.compact-layout .upload-container,
+html.compact-layout .diseases-page,
+html.compact-layout .profile-container,
+html.compact-layout .settings-panel,
+html.compact-layout .results-panel,
+html.compact-layout .upload-options,
+html.compact-layout .profile-card,
+html.compact-layout .recent-uploads {
+  padding: 12px !important;
+}
+
+html.compact-layout .nav-link,
+html.compact-layout .option-item,
+html.compact-layout .lang-option,
+html.compact-layout .result-card,
+html.compact-layout .analysis-card {
+  padding: 10px !important;
+}
+
+html,
+body {
+  width: 100%;
+  min-height: 100%;
 }
 
 #app {
-  max-width: 1280px;
+  width: min(100%, 1280px);
   margin: 0 auto;
-  padding: 2rem;
+  padding: 2rem 1.5rem;
   text-align: center;
+}
+
+@media (max-width: 768px) {
+  #app {
+    padding: 1rem;
+  }
 }
 
 @media (prefers-color-scheme: light) {

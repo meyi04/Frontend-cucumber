@@ -206,10 +206,17 @@ body {
 }
 
 #app {
-  width: min(100%, 1280px);
+  width: min(100%, 1600px);
+  max-width: 1600px;
   margin: 0 auto;
-  padding: 2rem 1.5rem;
-  text-align: center;
+  padding: 2rem 2rem;
+  text-align: left;
+}
+
+@media (min-width: 1440px) {
+  #app {
+    padding: 2rem 3rem;
+  }
 }
 
 @media (max-width: 768px) {

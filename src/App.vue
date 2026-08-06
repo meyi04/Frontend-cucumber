@@ -177,21 +177,30 @@ const closeSidebar = () => {
   min-height: 100vh;
   position: relative;
   z-index: 1;
-  padding: 24px 20px 28px;
+  padding: 24px 24px 28px;
   transition: padding-left 0.3s ease, transform 0.3s ease;
   width: 100%;
-  max-width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  box-sizing: border-box;
+}
+
+@media (min-width: 1440px) {
+  .main-content {
+    padding: 32px 40px 36px;
+  }
 }
 
 @media (min-width: 768px) {
   .main-content.with-sidebar {
-    padding-left: 70px;
+    padding-left: 300px;
   }
 }
 
 @media (max-width: 767px) {
   .main-content {
     padding: 18px 14px 24px;
+    max-width: 100%;
   }
 }
 </style>

@@ -12,13 +12,15 @@ import {
   doc,
   setDoc,
   getDoc,
-  collection,  // ← ADD THIS
-  addDoc,      // ← ADD THIS
-  getDocs,     // ← ADD THIS
-  query,       // ← ADD THIS
-  where,       // ← ADD THIS
-  orderBy,     // ← ADD THIS
-  serverTimestamp // ← ADD THIS
+  collection,
+  addDoc,
+  getDocs,
+  query,
+  where,
+  orderBy,
+  serverTimestamp,
+  updateDoc,
+  arrayUnion
 } from 'firebase/firestore'
 import {
   getStorage,
@@ -70,5 +72,7 @@ export {
   query,       // ← ADD THIS
   where,       // ← ADD THIS
   orderBy,     // ← ADD THIS
-  serverTimestamp // ← ADD THIS
+  serverTimestamp, // ← ADD THIS
+  updateDoc,
+  arrayUnion // ← ADD THIS
 }

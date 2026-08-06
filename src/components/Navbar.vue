@@ -160,7 +160,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../store/auth'
 
@@ -177,6 +177,25 @@ const router = useRouter()
 const authStore = useAuthStore()
 const showUserMenu = ref(false)
 const isCollapsed = ref(false)
+
+watch(
+  () => props.isOpen,
+  (isOpen) => {
+    if (isOpen && window.innerWidth < 768) {
+      isCollapsed.value = false
+    }
+  }
+)
+
+const toggleSidebar = () => {
+  if (window.innerWidth < 768) {
+    emit('close')
+    return
+  }
+
+  isCollapsed.value = !isCollapsed.value
+  showUserMenu.value = false
+}
 
 // User data
 const userName = computed(() => {
@@ -197,11 +216,6 @@ const userInitials = computed(() => {
     .toUpperCase()
     .slice(0, 2)
 })
-
-const toggleSidebar = () => {
-  isCollapsed.value = !isCollapsed.value
-  showUserMenu.value = false // Close user menu when collapsing
-}
 
 const handleNavClick = (event) => {
   if (event.target.closest('a')) {
@@ -584,9 +598,11 @@ onUnmounted(() => {
     left: 0;
     top: 0;
     z-index: 1000;
-    width: 260px;
+    width: min(100vw, 320px);
+    max-width: 320px;
     transform: translateX(-100%);
     transition: transform 0.25s ease;
+    height: 100vh;
   }
 
   .sidebar-wrapper.open {
@@ -595,15 +611,19 @@ onUnmounted(() => {
   }
 
   .sidebar-wrapper.collapsed {
-    width: 80px;
+    width: min(100vw, 320px);
   }
 
   .sidebar-wrapper.open.collapsed {
-    width: 260px;
+    width: min(100vw, 320px);
   }
 
   .sidebar {
     height: 100vh;
+  }
+
+  .sidebar-toggle {
+    display: none;
   }
 }
 </style>

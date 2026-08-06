@@ -47,13 +47,13 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useAuthStore } from './store/auth'
 import Navbar from './components/Navbar.vue'
 import SettingsModal from './components/SettingsModal.vue'
 import { initializeBackendCheck } from './utils/backend-check'
-import Chatbot from './components/Chatbot.vue' // Add this import
+import Chatbot from './components/Chatbot.vue'
 import { useLanguage } from './store/language'
 
 const route = useRoute()
@@ -81,12 +81,8 @@ onMounted(async () => {
       console.error('Backend connection failed:', result.error)
     }
   })
-  
-  // Check screen size
-  window.addEventListener('resize', () => {
-    isMobile.value = window.innerWidth < 768
-  })
-    const savedLang = localStorage.getItem('preferredLanguage')
+
+  const savedLang = localStorage.getItem('preferredLanguage')
   if (savedLang) {
     setLanguage(savedLang)
   }
@@ -107,6 +103,21 @@ const toggleSidebar = () => {
 const closeSidebar = () => {
   isSidebarOpen.value = false
 }
+
+const handleResize = () => {
+  isMobile.value = window.innerWidth < 768
+  if (!isMobile.value) {
+    isSidebarOpen.value = false
+  }
+}
+
+onMounted(() => {
+  window.addEventListener('resize', handleResize)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', handleResize)
+})
 </script>
 
 <style scoped>

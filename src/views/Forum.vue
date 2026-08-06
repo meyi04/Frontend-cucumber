@@ -125,7 +125,6 @@
               </div>
             </div>
 
-            <p class="post-text">{{ post.text }}</p>
             <img v-if="post.imageUrl" :src="post.imageUrl" alt="Forum post" class="post-image" />
           </div>
         </div>
@@ -753,6 +752,120 @@ onMounted(() => {
 @media (max-width: 992px) {
   .forum-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .forum-page {
+    padding: 16px 14px 24px;
+    gap: 20px;
+  }
+
+  .forum-header-content {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .forum-metrics {
+    width: 100%;
+    gap: 12px;
+    justify-content: flex-start;
+  }
+
+  .metric-card {
+    width: 100%;
+    min-width: auto;
+  }
+
+  .card {
+    padding: 18px;
+  }
+
+  .compose-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .compose-note {
+    white-space: normal;
+  }
+
+  .compose-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .upload-btn,
+  .post-btn,
+  .action-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .post-top,
+  .post-meta-row,
+  .post-author,
+  .reply-header,
+  .reply-controls {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .post-title {
+    font-size: 1.1rem;
+  }
+
+  .post-actions {
+    width: 100%;
+  }
+
+  .post-actions .action-btn {
+    width: 100%;
+  }
+
+  .reply-form textarea {
+    min-height: 100px;
+  }
+
+  .image-preview img,
+  .post-image {
+    max-height: 260px;
+  }
+
+  .forum-sidebar {
+    gap: 18px;
+  }
+
+  .sidebar-card {
+    padding: 18px;
+  }
+}
+
+@media (max-width: 560px) {
+  .forum-header h1 {
+    font-size: 1.8rem;
+  }
+
+  .eyebrow {
+    font-size: 0.72rem;
+  }
+
+  .forum-description {
+    font-size: 0.95rem;
+  }
+
+  .author-avatar {
+    width: 38px;
+    height: 38px;
+  }
+
+  .post-title {
+    font-size: 1rem;
+  }
+
+  .post-actions {
+    gap: 8px;
   }
 }
 </style>

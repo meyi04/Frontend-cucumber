@@ -222,7 +222,7 @@ const sendMessage = async () => {
       }))
     
     // Call ChatGPT API
-    const response = await fetch('http://localhost:5000/api/chat', {
+    const response = await fetch('http://143.198.90.26/api/chat', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

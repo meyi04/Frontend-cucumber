@@ -616,7 +616,7 @@ const checkBackendConnection = async () => {
     const controller = new AbortController()
     const timeoutId = setTimeout(() => controller.abort(), 5000) // 5 second timeout
     
-    const response = await fetch('http://localhost:5000/health', {
+    const response = await fetch('http://143.198.90.26/health', {
       signal: controller.signal
     })
     
@@ -630,7 +630,7 @@ const checkBackendConnection = async () => {
       
       // Check model status
       try {
-        const modelResponse = await fetch('http://localhost:5000/api/model/status', {
+        const modelResponse = await fetch('http://143.198.90.26/api/model/status', {
           signal: AbortSignal.timeout(3000)
         })
         if (modelResponse.ok) {
@@ -695,7 +695,7 @@ const scanForPest = async () => {
 
     let fallback = false
     try {
-      const response = await fetch('http://localhost:5000/api/pest-detect', {
+      const response = await fetch('http://143.198.90.26/api/pest-detect', {
         method: 'POST',
         body: formData,
         signal: AbortSignal.timeout(10000)
@@ -803,7 +803,7 @@ const processImage = async () => {
         const formData = new FormData()
         formData.append('image', fileToProcess)
         
-        const response = await fetch('http://localhost:5000/api/detect', {
+        const response = await fetch('http://143.198.90.26/api/detect', {
           method: 'POST',
           body: formData,
           signal: AbortSignal.timeout(10000)

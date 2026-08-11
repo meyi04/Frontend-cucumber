@@ -1,7 +1,7 @@
 // Utility to check if backend is running
 export const checkBackend = async () => {
   try {
-    const response = await fetch('http://localhost:5000/health', {
+    const response = await fetch('http://143.198.90.26/health', {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',

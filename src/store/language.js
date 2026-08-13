@@ -84,7 +84,7 @@ export const translations = {
     avgProcessing: 'Avg. Processing',
     locale: 'en-PH', // For date formatting (you can also use 'tl-PH' if available)
     // Common
-    appName: 'Cucumber Disease Detection',
+    appName: 'Cu-Scan Plant Disease Detection',
     loading: 'Loading...',
     error: 'Error',
     success: 'Success',
@@ -138,7 +138,7 @@ export const translations = {
 
     // CTA Section
     ctaTitle: 'Ready to Protect Your Crops?',
-    ctaDescription: 'Join hundreds of farmers and agricultural experts using CucumberAI for disease prevention.',
+    ctaDescription: 'Join hundreds of farmers and agricultural experts using Cu-Scan for disease prevention.',
     ctaButton: 'Start Free Analysis',
 
     // Footer
@@ -176,7 +176,7 @@ export const translations = {
     modalFeaturesSubtitle: 'Everything you need for effective cucumber disease management',
     modalHowItWorksSubtitle: 'Simple steps to protect your crops',
     modalResearchSubtitle: 'Backed by scientific research and continuous innovation',
-    modalDemoSubtitle: 'See how CucumberAI works in action',
+    modalDemoSubtitle: 'See how Cu-Scan works in action',
 
     // Modal Features
     modalFeature1Title: 'AI-Powered Detection',
@@ -285,7 +285,7 @@ export const translations = {
 
     // CTA Section
     ctaTitle: 'Handa nang Protektahan ang Iyong mga Pananim?',
-    ctaDescription: 'Sumali sa daan-daang magsasaka at agricultural experts na gumagamit ng CucumberAI para sa pag-iwas sa sakit.',
+    ctaDescription: 'Sumali sa daan-daang magsasaka at agricultural experts na gumagamit ng Cu-Scan para sa pag-iwas sa sakit.',
     ctaButton: 'Simulan ang Libreng Analysis',
 
     // Footer
@@ -323,7 +323,7 @@ export const translations = {
     modalFeaturesSubtitle: 'Lahat ng kailangan mo para sa epektibong pamamahala ng sakit sa pipino',
     modalHowItWorksSubtitle: 'Simpleng hakbang para protektahan ang iyong mga pananim',
     modalResearchSubtitle: 'Sinusuportahan ng siyentipikong pananaliksik at patuloy na pagbabago',
-    modalDemoSubtitle: 'Tingnan kung paano gumagana ang CucumberAI',
+    modalDemoSubtitle: 'Tingnan kung paano gumagana ang Cu-Scan',
 
     // Modal Features
     modalFeature1Title: 'AI-Powered Detection',

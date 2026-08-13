@@ -16,7 +16,7 @@
             </svg>
           </div>
           <div class="logo-text">
-            <h1>Cucumber<span class="logo-highlight">AI</span></h1>
+            <h1>Cu-Scan</h1>
             <p class="logo-subtitle">Intelligent Plant Analysis</p>
           </div>
         </div>

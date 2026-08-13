@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gray-100">
+  <div class="app-shell min-h-screen bg-gray-100">
     <!-- Show loading only briefly -->
     <div v-if="initialLoading && !isAppReady" class="fixed inset-0 flex items-center justify-center bg-white z-50 transition-opacity duration-300">
       <div class="text-center">
@@ -191,7 +191,7 @@ onUnmounted(() => {
   padding: 24px 24px 28px;
   transition: padding-left 0.3s ease, transform 0.3s ease;
   width: 100%;
-  max-width: 1400px;
+  max-width: 1600px;
   margin: 0 auto;
   box-sizing: border-box;
 }
@@ -215,3 +215,4 @@ onUnmounted(() => {
   }
 }
 </style>
+  

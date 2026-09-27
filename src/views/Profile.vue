@@ -69,6 +69,10 @@
               <span class="stat-label">{{ t('infected') }}</span>
             </div>
             <div class="stat-item" @click="navigateToHistory">
+              <span class="stat-value" style="color: #8b5cf6;">{{ userStats.pestCount || 0 }}</span>
+              <span class="stat-label">{{ t('pestScansCount') }}</span>
+            </div>
+            <div class="stat-item" @click="navigateToHistory">
               <span class="stat-value">{{ userStats.recentAnalyses || 0 }}</span>
               <span class="stat-label">{{ t('recentSevenDays') }}</span>
             </div>
@@ -88,15 +92,15 @@
                 <div v-else class="no-image">{{ t('noImage') }}</div>
               </div>
               <div class="analysis-info">
-                <h4>{{ analysis.disease || 'Unknown' }}</h4>
+                <h4>{{ analysis.recordType === 'pest' ? analysis.pest || t('unknown') : analysis.disease || t('unknown') }}</h4>
                 <p class="analysis-confidence">
-                  {{ t('confidence') }}: <strong>{{ (analysis.confidence * 1).toFixed(1) }}%</strong>
+                  {{ t('confidence') }}: <strong>{{ formatConfidence(analysis.confidence) }}%</strong>
                 </p>
                 <p class="analysis-date">
                   {{ formatDate(analysis.timestamp) }}
                 </p>
                 <div class="analysis-status" :class="getStatusClass(analysis.result || analysis.status)">
-                  {{ analysis.result || analysis.status || 'Unknown' }}
+                  {{ analysis.recordType === 'pest' ? t('pest') : analysis.result || analysis.status || t('unknown') }}
                 </div>
               </div>
             </div>
@@ -182,8 +186,6 @@ import {
   query, 
   where, 
   getDocs, 
-  orderBy,
-  limit,
   doc,
   getDoc
 } from 'firebase/firestore'
@@ -199,6 +201,7 @@ const userStats = ref({
   totalAnalyses: 0,
   healthyCount: 0,
   infectedCount: 0,
+  pestCount: 0,
   recentAnalyses: 0
 })
 
@@ -245,6 +248,16 @@ const formatDate = (timestamp) => {
     hour: '2-digit',
     minute: '2-digit'
   })
+}
+
+const formatConfidence = (value) => {
+  const confidence = Number(value) || 0
+  return (confidence > 0 && confidence <= 1 ? confidence * 100 : confidence).toFixed(1)
+}
+
+const getAnalysisDate = (analysis) => {
+  const timestamp = analysis.timestamp || analysis.uploadedAt || analysis.createdAt
+  return timestamp?.toDate ? timestamp.toDate() : new Date(timestamp || 0)
 }
 
 const getStatusClass = (status) => {
@@ -298,32 +311,42 @@ const loadUserStats = async () => {
     // Query for user's uploads
     const uploadsRef = collection(db, 'uploads')
     const userUploadsQuery = query(uploadsRef, where('userId', '==', userId))
-    const snapshot = await getDocs(userUploadsQuery)
+    const pestScansQuery = query(collection(db, 'pestScans'), where('userId', '==', userId))
+    const [snapshot, pestSnapshot] = await Promise.all([
+      getDocs(userUploadsQuery),
+      getDocs(pestScansQuery).catch(err => {
+        console.error('Error loading pest scan stats:', err)
+        return null
+      })
+    ])
+    const pestScans = pestSnapshot?.docs || []
     
     const stats = {
-      totalAnalyses: 0,
+      totalAnalyses: snapshot.size + pestScans.length,
       healthyCount: 0,
       infectedCount: 0,
+      pestCount: pestScans.length,
       recentAnalyses: 0
     }
     
     snapshot.forEach((doc) => {
       const data = doc.data()
-      stats.totalAnalyses++
-      
-      // Check if healthy or infected
-      const status = data.status || data.result || data.disease || ''
-      if (status.toLowerCase() === 'healthy') {
+      const isPestScan = data.scanType === 'pest' || Boolean(data.pest)
+      if (isPestScan) stats.pestCount++
+
+      const status = String(data.status || data.result || '').toLowerCase()
+      const disease = String(data.disease || '').toLowerCase()
+      if (!isPestScan && (status === 'healthy' || disease === 'healthy')) {
         stats.healthyCount++
-      } else if (status.toLowerCase() === 'infected') {
+      } else if (!isPestScan && (status === 'infected' || (disease && disease !== 'healthy'))) {
         stats.infectedCount++
       }
       
-      // Check if recent (within 7 days)
-      const uploadDate = data.timestamp?.toDate ? data.timestamp.toDate() : new Date(data.timestamp)
-      if (uploadDate > sevenDaysAgo) {
-        stats.recentAnalyses++
-      }
+      if (getAnalysisDate(data) > sevenDaysAgo) stats.recentAnalyses++
+    })
+
+    pestScans.forEach(doc => {
+      if (getAnalysisDate(doc.data()) > sevenDaysAgo) stats.recentAnalyses++
     })
     
     userStats.value = stats
@@ -334,6 +357,7 @@ const loadUserStats = async () => {
       totalAnalyses: 0,
       healthyCount: 0,
       infectedCount: 0,
+      pestCount: 0,
       recentAnalyses: 0
     }
   }
@@ -343,26 +367,26 @@ const loadRecentAnalyses = async () => {
   try {
     const userId = authStore.user.uid
     const uploadsRef = collection(db, 'uploads')
-    
-    // Query: user's uploads ordered by timestamp, latest first, limit 5
-    const recentQuery = query(
-      uploadsRef,
-      where('userId', '==', userId),
-      orderBy('timestamp', 'desc'),
-      limit(5)
-    )
-    
-    const snapshot = await getDocs(recentQuery)
-    const uploads = []
-    
-    snapshot.forEach((doc) => {
-      uploads.push({
-        id: doc.id,
-        ...doc.data()
+    const pestScansRef = collection(db, 'pestScans')
+    const [snapshot, pestSnapshot] = await Promise.all([
+      getDocs(query(uploadsRef, where('userId', '==', userId))),
+      getDocs(query(pestScansRef, where('userId', '==', userId))).catch(err => {
+        console.error('Error loading recent pest scans:', err)
+        return null
       })
+    ])
+    const analyses = snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data(),
+      recordType: doc.data().scanType === 'pest' || doc.data().pest ? 'pest' : 'disease'
+    }))
+    pestSnapshot?.docs.forEach(doc => {
+      analyses.push({ id: doc.id, ...doc.data(), recordType: 'pest' })
     })
-    
-    recentAnalysesList.value = uploads
+
+    recentAnalysesList.value = analyses
+      .sort((a, b) => getAnalysisDate(b) - getAnalysisDate(a))
+      .slice(0, 5)
     
   } catch (err) {
     console.error('Error loading recent analyses:', err)
@@ -599,7 +623,7 @@ onMounted(() => {
 /* Account Stats */
 .account-stats {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 24px;
 }
 

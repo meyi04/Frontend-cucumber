@@ -50,4 +50,6 @@ onMounted(() => { animate(stat1.value, 1000, '+'); animate(stat2.value, 95, '%')
 .feature-card button b { transition: transform .2s ease; }
 .feature-card button:hover { color: #05704e; background: #eaf7ef; }
 .feature-card button:hover b { transform: translateX(3px); }
+.nav-links button, footer button { border: 0; }
+.home { position: relative; }
 </style>

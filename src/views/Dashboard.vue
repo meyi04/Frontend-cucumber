@@ -202,6 +202,14 @@
         @click="showDetailedStats('infected')"
       />
       <StatCard
+        :number="pestCount.toLocaleString()"
+        :label="t('pestScansCount')"
+        icon="🐛"
+        color="gradient-purple"
+        :loading="isLoading"
+        @click="showDetailedStats('pests')"
+      />
+      <StatCard
         :number="`${accuracyPercent}%`"
         :label="t('modelAccuracy')"
         icon="🎯"
@@ -400,6 +408,10 @@ const infectedCount = computed(() => {
   return userHistory.value.filter(item => item.status === 'infected').length
 })
 
+const pestCount = computed(() => {
+  return userHistory.value.filter(item => item.recordType === 'pest').length
+})
+
 const totalAnalyses = computed(() => {
   return userHistory.value.length
 })
@@ -411,9 +423,10 @@ const accuracyPercent = computed(() => {
 })
 
 const averageProcessingTime = computed(() => {
-  if (!userHistory.value.length) return `0.0 ${t('seconds')}`
-  const totalSeconds = userHistory.value.reduce((sum, item) => sum + (item.processingTime || 0), 0)
-  const avg = totalSeconds / userHistory.value.length
+  const timedItems = userHistory.value.filter(item => item.processingTime > 0)
+  if (!timedItems.length) return `0.0 ${t('seconds')}`
+  const totalSeconds = timedItems.reduce((sum, item) => sum + item.processingTime, 0)
+  const avg = totalSeconds / timedItems.length
   return `${avg.toFixed(1)} ${t('seconds')}`
 })
 
@@ -516,11 +529,14 @@ const checkProcessingTime = () => {
 
 const formatHistoryItem = (data, id) => {
   const filename = data.fileName || data.filename || `analysis_${id?.slice(0, 8)}`
-  let status = 'unknown'
-  if (data.status) status = String(data.status).toLowerCase()
-  else if (data.result) status = String(data.result).toLowerCase()
-  else if (data.disease === 'healthy') status = 'healthy'
-  else if (data.disease) status = 'infected'
+  const isPestScan = data.scanType === 'pest' || Boolean(data.pest)
+  let status = isPestScan ? 'pest' : 'unknown'
+  if (!isPestScan) {
+    if (data.status) status = String(data.status).toLowerCase()
+    else if (data.result) status = String(data.result).toLowerCase()
+    else if (data.disease === 'healthy') status = 'healthy'
+    else if (data.disease) status = 'infected'
+  }
 
   let confidence = 0
   if (typeof data.confidence === 'number') {
@@ -548,7 +564,8 @@ const formatHistoryItem = (data, id) => {
     filename,
     status,
     confidence,
-    disease: data.disease || 'unknown',
+    recordType: isPestScan ? 'pest' : 'disease',
+    disease: (isPestScan ? data.pest : data.disease) || 'unknown',
     processingTime: Number(data.processingTime) || 0,
     uploadedAt,
     originalData: data
@@ -645,14 +662,36 @@ const loadUserHistory = async () => {
       }))
     )
 
+    const pestScansRef = collection(db, 'pestScans')
+    const pestQueries = []
+    if (userId) pestQueries.push(query(pestScansRef, where('userId', '==', userId)))
+    if (userEmail) pestQueries.push(query(pestScansRef, where('userEmail', '==', userEmail)))
+    const pestSnapshots = await Promise.all(
+      pestQueries.map(q => getDocs(q).catch(err => {
+        console.error('Dashboard pest query error:', err)
+        return { empty: true, forEach: () => {} }
+      }))
+    )
+
     const items = []
     const seen = new Set()
     snapshots.forEach(snapshot => {
       if (!snapshot || snapshot.empty) return
       snapshot.forEach(doc => {
-        if (seen.has(doc.id)) return
-        seen.add(doc.id)
+        const recordKey = `uploads:${doc.id}`
+        if (seen.has(recordKey)) return
+        seen.add(recordKey)
         items.push(formatHistoryItem(doc.data(), doc.id))
+      })
+    })
+
+    pestSnapshots.forEach(snapshot => {
+      if (!snapshot || snapshot.empty) return
+      snapshot.forEach(doc => {
+        const recordKey = `pestScans:${doc.id}`
+        if (seen.has(recordKey)) return
+        seen.add(recordKey)
+        items.push(formatHistoryItem({ ...doc.data(), scanType: 'pest' }, doc.id))
       })
     })
 
@@ -690,7 +729,7 @@ const runDiagnostic = () => {
 
 const viewLogs = () => {
   console.log('Viewing logs...')
-  router.push('/logs')
+  router.push('/history')
 }
 
 // Time range functions
@@ -1271,7 +1310,7 @@ onMounted(() => {
 
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 24px;
   margin-bottom: 32px;
 }
@@ -1455,9 +1494,19 @@ onMounted(() => {
 }
 
 @media (max-width: 1200px) {
+  .stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .status-grid,
   .quick-stats {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1201px) and (max-width: 1500px) {
+  .stats-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 

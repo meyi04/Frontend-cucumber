@@ -1,18 +1,16 @@
 <template>
   <div class="stat-card" :class="color">
     <div class="card-content">
-      <div class="card-icon">
-        {{ icon }}
-      </div>
-      <div class="card-stats">
+      <div class="card-topline">
+        <div class="card-icon">{{ icon }}</div>
         <div class="stat-number" :class="{ 'loading': loading }">
           {{ loading ? '...' : number }}
         </div>
-        <div class="stat-label">{{ label }}</div>
+        <div v-if="trend" class="card-trend" :class="getTrendClass(trend)">
+          {{ trend }}
+        </div>
       </div>
-      <div class="card-trend" :class="getTrendClass(trend)">
-        {{ trend }}
-      </div>
+      <div class="stat-label">{{ label }}</div>
     </div>
     <div class="progress-bar">
       <div class="progress-fill" :style="{ width: loading ? '50%' : '100%' }"></div>
@@ -59,6 +57,9 @@ const getTrendClass = (trend) => {
 
 <style scoped>
 .stat-card {
+  display: flex;
+  flex-direction: column;
+  min-height: 200px;
   background: white;
   border-radius: 20px;
   padding: 24px;
@@ -111,8 +112,15 @@ const getTrendClass = (trend) => {
 
 .card-content {
   display: flex;
-  align-items: flex-start;
-  gap: 20px;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.card-topline {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
 }
 
 .card-icon {
@@ -124,16 +132,13 @@ const getTrendClass = (trend) => {
   line-height: 1;
 }
 
-.card-stats {
-  flex: 1;
-}
-
 .stat-number {
   font-size: 2.5rem;
   font-weight: 800;
   color: #1e293b;
   margin-bottom: 4px;
   line-height: 1;
+  white-space: nowrap;
 }
 
 .stat-number.loading {
@@ -162,7 +167,9 @@ const getTrendClass = (trend) => {
   font-weight: 600;
   padding: 4px 12px;
   border-radius: 12px;
-  align-self: center;
+  justify-self: end;
+  white-space: nowrap;
+  padding: 4px 9px;
 }
 
 .trend-up {
@@ -181,7 +188,7 @@ const getTrendClass = (trend) => {
 }
 
 .progress-bar {
-  margin-top: 24px;
+  margin-top: auto;
   height: 4px;
   background: #e2e8f0;
   border-radius: 2px;

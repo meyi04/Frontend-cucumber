@@ -1,14 +1,14 @@
 <template>
   <div class="profile-container">
     <div class="profile-header">
-      <h1 class="profile-title">Profile Settings</h1>
-      <p class="profile-subtitle">Manage your account information</p>
+      <h1 class="profile-title">{{ t('profileSettings') }}</h1>
+      <p class="profile-subtitle">{{ t('manageAccount') }}</p>
     </div>
 
     <!-- Loading State -->
     <div v-if="loading" class="loading-container">
       <div class="spinner"></div>
-      <p>Loading profile data...</p>
+      <p>{{ t('loadingProfile') }}</p>
     </div>
 
     <!-- Error State -->
@@ -19,7 +19,7 @@
         <path d="M12 16H12.01" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
       </svg>
       <p>{{ error }}</p>
-      <button @click="loadUserData" class="retry-btn">Retry</button>
+      <button @click="loadUserData" class="retry-btn">{{ t('retry') }}</button>
     </div>
 
     <!-- Profile Content -->
@@ -38,9 +38,9 @@
                   <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.5"/>
                   <path d="M8 12L11 15L16 10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
-                <span>{{ authStore.user?.emailVerified ? 'Email Verified' : 'Email Not Verified' }}</span>
+                <span>{{ authStore.user?.emailVerified ? t('emailVerified') : t('emailNotVerified') }}</span>
                 <button v-if="!authStore.user?.emailVerified" @click="resendVerification" class="verify-link">
-                  Resend verification
+                  {{ t('resendVerificationEmail') }}
                 </button>
               </div>
               <div class="member-since">
@@ -50,7 +50,7 @@
                   <line x1="8" y1="2" x2="8" y2="6" stroke="currentColor" stroke-width="1.5"/>
                   <line x1="3" y1="10" x2="21" y2="10" stroke="currentColor" stroke-width="1.5"/>
                 </svg>
-                <span>Member since: {{ memberSince }}</span>
+                <span>{{ t('memberSince') }}: {{ memberSince }}</span>
               </div>
             </div>
           </div>
@@ -58,39 +58,39 @@
           <div class="account-stats">
             <div class="stat-item" @click="navigateToHistory">
               <span class="stat-value">{{ userStats.totalAnalyses || 0 }}</span>
-              <span class="stat-label">Total Analyses</span>
+              <span class="stat-label">{{ t('totalAnalyses') }}</span>
             </div>
             <div class="stat-item" @click="filterHistory('healthy')">
               <span class="stat-value" style="color: #10b981;">{{ userStats.healthyCount || 0 }}</span>
-              <span class="stat-label">Healthy</span>
+              <span class="stat-label">{{ t('healthy') }}</span>
             </div>
             <div class="stat-item" @click="filterHistory('infected')">
               <span class="stat-value" style="color: #ef4444;">{{ userStats.infectedCount || 0 }}</span>
-              <span class="stat-label">Infected</span>
+              <span class="stat-label">{{ t('infected') }}</span>
             </div>
             <div class="stat-item" @click="navigateToHistory">
               <span class="stat-value">{{ userStats.recentAnalyses || 0 }}</span>
-              <span class="stat-label">Recent (7 days)</span>
+              <span class="stat-label">{{ t('recentSevenDays') }}</span>
             </div>
           </div>
         </div>
 
         <!-- Recent Analyses Section -->
         <div class="recent-analyses-section">
-          <h3 class="section-title">Recent Analyses</h3>
+          <h3 class="section-title">{{ t('recentAnalyses') }}</h3>
           <div v-if="recentAnalysesList.length === 0" class="empty-state">
-            <p>No analyses found. Start by uploading an image.</p>
+            <p>{{ t('noAnalysesStart') }}</p>
           </div>
           <div v-else class="analyses-grid">
             <div v-for="analysis in recentAnalysesList" :key="analysis.id" class="analysis-card">
               <div class="analysis-image">
                 <img v-if="analysis.imageUrl" :src="analysis.imageUrl" :alt="analysis.disease" />
-                <div v-else class="no-image">No Image</div>
+                <div v-else class="no-image">{{ t('noImage') }}</div>
               </div>
               <div class="analysis-info">
                 <h4>{{ analysis.disease || 'Unknown' }}</h4>
                 <p class="analysis-confidence">
-                  Confidence: <strong>{{ (analysis.confidence * 100).toFixed(1) }}%</strong>
+                  {{ t('confidence') }}: <strong>{{ (analysis.confidence * 1).toFixed(1) }}%</strong>
                 </p>
                 <p class="analysis-date">
                   {{ formatDate(analysis.timestamp) }}
@@ -105,24 +105,24 @@
 
         <!-- User Details Section -->
         <div class="details-section">
-          <h3 class="section-title">Account Details</h3>
+          <h3 class="section-title">{{ t('accountDetails') }}</h3>
           <div class="details-grid">
             <div class="detail-item">
-              <span class="detail-label">User ID:</span>
+              <span class="detail-label">{{ t('userId') }}:</span>
               <span class="detail-value">{{ authStore.user?.uid }}</span>
             </div>
             <div class="detail-item">
-              <span class="detail-label">Account Created:</span>
+              <span class="detail-label">{{ t('accountCreated') }}:</span>
               <span class="detail-value">{{ formatDate(authStore.user?.metadata?.creationTime) }}</span>
             </div>
             <div class="detail-item">
-              <span class="detail-label">Last Login:</span>
+              <span class="detail-label">{{ t('lastLogin') }}:</span>
               <span class="detail-value">{{ formatDate(authStore.user?.metadata?.lastSignInTime) }}</span>
             </div>
             <div class="detail-item">
-              <span class="detail-label">Email Status:</span>
+              <span class="detail-label">{{ t('emailStatus') }}:</span>
               <span class="detail-value" :class="{ 'text-emerald-500': authStore.user?.emailVerified, 'text-amber-500': !authStore.user?.emailVerified }">
-                {{ authStore.user?.emailVerified ? 'Verified' : 'Pending Verification' }}
+                {{ authStore.user?.emailVerified ? t('verified') : t('pendingVerification') }}
               </span>
             </div>
           </div>
@@ -130,7 +130,7 @@
 
         <!-- Actions Section -->
         <div class="actions-section">
-          <h3 class="section-title">Account Actions</h3>
+          <h3 class="section-title">{{ t('accountActions') }}</h3>
           <div class="actions-grid">
             <button @click="navigateToUpload" class="action-btn primary">
               <svg viewBox="0 0 24 24" fill="none">
@@ -138,14 +138,14 @@
                 <path d="M17 8L12 3L7 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                 <path d="M12 3V15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
               </svg>
-              Upload New Image
+              {{ t('uploadNewImage') }}
             </button>
             <button @click="navigateToHistory" class="action-btn secondary">
               <svg viewBox="0 0 24 24" fill="none">
                 <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.5"/>
                 <path d="M12 6V12L16 14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
               </svg>
-              View History
+              {{ t('viewHistory') }}
             </button>
             <button @click="resetPassword" class="action-btn tertiary">
               <svg viewBox="0 0 24 24" fill="none">
@@ -154,7 +154,7 @@
                 <path d="M15 7L17 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
                 <path d="M9 17C9 17 9.67 18 11 18C12.33 18 13 17 13 17" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
               </svg>
-              Reset Password
+              {{ t('resetPassword') }}
             </button>
             <button @click="logout" class="action-btn danger">
               <svg viewBox="0 0 24 24" fill="none">
@@ -162,7 +162,7 @@
                 <path d="M16 17L21 12L16 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                 <path d="M21 12H9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
               </svg>
-              Logout
+              {{ t('logout') }}
             </button>
           </div>
         </div>
@@ -175,6 +175,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../store/auth'
+import { useLanguage } from '../store/language'
 import { db } from '../firebase'
 import { 
   collection, 
@@ -189,6 +190,7 @@ import {
 
 const router = useRouter()
 const authStore = useAuthStore()
+const { t } = useLanguage()
 const loading = ref(true)
 const error = ref('')
 const userData = ref({})
@@ -223,9 +225,9 @@ const avatarGradient = computed(() => {
 })
 
 const memberSince = computed(() => {
-  if (!authStore.user?.metadata?.creationTime) return 'N/A'
+  if (!authStore.user?.metadata?.creationTime) return t('notAvailable')
   const date = new Date(authStore.user.metadata.creationTime)
-  return date.toLocaleDateString('en-US', { 
+  return date.toLocaleDateString(t('locale') || 'en-US', { 
     year: 'numeric', 
     month: 'long', 
     day: 'numeric' 
@@ -234,9 +236,9 @@ const memberSince = computed(() => {
 
 // Methods
 const formatDate = (timestamp) => {
-  if (!timestamp) return 'N/A'
+  if (!timestamp) return t('notAvailable')
   const date = timestamp?.toDate ? timestamp.toDate() : new Date(timestamp)
-  return date.toLocaleDateString('en-US', {
+  return date.toLocaleDateString(t('locale') || 'en-US', {
     year: 'numeric',
     month: 'short',
     day: 'numeric',
@@ -253,7 +255,7 @@ const getStatusClass = (status) => {
 
 const loadUserData = async () => {
   if (!authStore.user?.uid) {
-    error.value = 'No user logged in'
+    error.value = t('noUserLoggedIn')
     loading.value = false
     return
   }
@@ -281,7 +283,7 @@ const loadUserData = async () => {
     
   } catch (err) {
     console.error('Error loading user data:', err)
-    error.value = 'Failed to load user data. Please try again.'
+    error.value = t('failedLoadProfile')
   } finally {
     loading.value = false
   }
@@ -394,10 +396,10 @@ const resetPassword = () => {
   if (email) {
     authStore.resetPassword(email)
       .then(() => {
-        alert(`Password reset email sent to ${email}`)
+        alert(t('passwordResetSent', { email }))
       })
-      .catch((err) => {
-        alert(`Error: ${err.message}`)
+      .catch(() => {
+        alert(t('operationFailed'))
       })
   }
 }
@@ -405,10 +407,10 @@ const resetPassword = () => {
 const resendVerification = () => {
   authStore.resendVerificationEmail()
     .then(() => {
-      alert('Verification email sent. Please check your inbox.')
+      alert(t('verificationEmailSent'))
     })
-    .catch((err) => {
-      alert(`Error: ${err.message}`)
+    .catch(() => {
+      alert(t('operationFailed'))
     })
 }
 

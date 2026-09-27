@@ -3,8 +3,8 @@
     <!-- Header -->
     <div class="history-header">
       <div class="header-content">
-        <h1 class="history-title">Analysis History</h1>
-        <p class="history-subtitle">Track all your cucumber leaf analyses and results</p>
+        <h1 class="history-title">{{ t('historyTitle') }}</h1>
+        <p class="history-subtitle">{{ t('historySubtitle') }}</p>
         <div class="header-actions">
           <button @click="refreshData" class="refresh-btn" :disabled="loading">
             <svg viewBox="0 0 24 24" fill="none">
@@ -13,7 +13,7 @@
               <path d="M20.49 9C19.9828 7.56678 19.1209 6.2854 17.9845 5.27542C16.8482 4.26543 15.4745 3.55976 14 3.22" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
               <path d="M3.51 15C4.0172 16.4332 4.87907 17.7146 6.01547 18.7246C7.15186 19.7346 8.52549 20.4402 10 20.78" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
-            Refresh
+            {{ t('refresh') }}
           </button>
           <button 
             v-if="displayHistory.length > 0" 
@@ -25,7 +25,7 @@
               <path d="M12 16V4M8 12L12 16L16 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
               <path d="M20 16V20H4V16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
-            Download All as PDF
+            {{ t('downloadAllPdf') }}
           </button>
         </div>
       </div>
@@ -39,7 +39,7 @@
           </div>
           <div class="stat-info">
             <p class="stat-value">{{ healthyCount }}</p>
-            <p class="stat-label">Healthy Plants</p>
+            <p class="stat-label">{{ t('healthyPlants') }}</p>
           </div>
         </div>
         <div class="stat-card">
@@ -52,7 +52,7 @@
           </div>
           <div class="stat-info">
             <p class="stat-value">{{ infectedCount }}</p>
-            <p class="stat-label">Infected Detected</p>
+            <p class="stat-label">{{ t('infectedDetected') }}</p>
           </div>
         </div>
         <div class="stat-card">
@@ -64,7 +64,7 @@
           </div>
           <div class="stat-info">
             <p class="stat-value">{{ history.length }}</p>
-            <p class="stat-label">Total Analyses</p>
+            <p class="stat-label">{{ t('totalAnalyses') }}</p>
           </div>
         </div>
       </div>
@@ -73,7 +73,7 @@
     <!-- Loading State -->
     <div v-if="loading" class="loading-state">
       <div class="loading-spinner-large"></div>
-      <p>Loading your analysis history...</p>
+      <p>{{ t('loadingHistory') }}</p>
     </div>
 
     <!-- Filters and Search -->
@@ -86,14 +86,14 @@
         <input 
           v-model="searchQuery"
           type="text" 
-          placeholder="Search by disease name, date, or status..."
+          :placeholder="t('searchHistory')"
           class="search-input"
         />
       </div>
       
       <div class="filter-controls">
         <div class="filter-group">
-          <label class="filter-label">Status:</label>
+          <label class="filter-label">{{ t('status') }}:</label>
           <div class="filter-chips">
             <button 
               v-for="status in statusFilters" 
@@ -102,7 +102,7 @@
               class="filter-chip"
               :class="{ 'active': activeFilters.status.includes(status.id) }"
             >
-              {{ status.label }}
+              {{ t(status.labelKey) }}
               <span class="chip-count">{{ getStatusCount(status.id) }}</span>
             </button>
             <button 
@@ -110,13 +110,13 @@
               class="filter-chip clear"
               v-if="hasActiveFilters"
             >
-              Clear Filters
+              {{ t('clearFilters') }}
             </button>
           </div>
         </div>
         
         <div class="filter-group">
-          <label class="filter-label">Date Range:</label>
+          <label class="filter-label">{{ t('dateRange') }}:</label>
           <div class="date-filters">
             <button 
               v-for="range in dateRanges" 
@@ -125,20 +125,20 @@
               class="date-filter"
               :class="{ 'active': activeDateRange === range.id }"
             >
-              {{ range.label }}
+              {{ t(range.labelKey) }}
             </button>
           </div>
         </div>
         
         <div class="sort-controls">
-          <label class="sort-label">Sort by:</label>
+          <label class="sort-label">{{ t('sortBy') }}:</label>
           <select v-model="sortBy" class="sort-select">
-            <option value="date-desc">Newest First</option>
-            <option value="date-asc">Oldest First</option>
-            <option value="confidence-desc">High Confidence</option>
-            <option value="confidence-asc">Low Confidence</option>
-            <option value="name-asc">Name A-Z</option>
-            <option value="name-desc">Name Z-A</option>
+            <option value="date-desc">{{ t('newestFirst') }}</option>
+            <option value="date-asc">{{ t('oldestFirst') }}</option>
+            <option value="confidence-desc">{{ t('highConfidence') }}</option>
+            <option value="confidence-asc">{{ t('lowConfidence') }}</option>
+            <option value="name-asc">{{ t('nameAZ') }}</option>
+            <option value="name-desc">{{ t('nameZA') }}</option>
           </select>
         </div>
       </div>
@@ -149,9 +149,9 @@
       <!-- Results Summary -->
       <div v-if="displayHistory.length > 0" class="results-summary">
         <p>
-          Showing <strong>{{ displayHistory.length }}</strong> of <strong>{{ history.length }}</strong> analyses
+          {{ t('showingAnalyses', { shown: displayHistory.length, total: history.length }) }}
           <span v-if="hasActiveFilters" class="filter-notice">
-            (filtered)
+            ({{ t('filtered') }})
           </span>
         </p>
       </div>
@@ -181,7 +181,7 @@
             <div class="card-header">
               <h4 class="card-title">{{ formatFilename(item.filename) }}</h4>
               <div class="card-status" :class="item.status">
-                {{ item.status === 'healthy' ? '🌿 Healthy' : '⚠️ Infected' }}
+                {{ item.recordType === 'pest' ? `🐛 ${t('pest')}` : item.status === 'healthy' ? `🌿 ${t('healthy')}` : `⚠️ ${t('infected')}` }}
               </div>
             </div>
             
@@ -196,13 +196,13 @@
             </div>
             
             <div class="card-disease">
-              <p class="disease-label">Detected Disease:</p>
-              <p class="disease-name">{{ item.disease || 'None' }}</p>
+              <p class="disease-label">{{ t(item.recordType === 'pest' ? 'detectedPest' : 'detectedDisease') }}:</p>
+              <p class="disease-name">{{ item.disease || t('none') }}</p>
             </div>
             
             <div class="card-confidence">
               <div class="confidence-header">
-                <span>Confidence</span>
+                <span>{{ t('confidence') }}</span>
                 <span class="confidence-value">{{ item.confidence }}%</span>
               </div>
               <div class="confidence-bar">
@@ -248,13 +248,13 @@
         <table>
           <thead>
             <tr>
-              <th>Image</th>
-              <th>Filename</th>
-              <th>Status</th>
-              <th>Disease</th>
-              <th>Confidence</th>
-              <th>Date</th>
-              <th>Actions</th>
+              <th>{{ t('image') }}</th>
+              <th>{{ t('filename') }}</th>
+              <th>{{ t('status') }}</th>
+              <th>{{ t('pestOrDisease') }}</th>
+              <th>{{ t('confidence') }}</th>
+              <th>{{ t('date') }}</th>
+              <th>{{ t('actions') }}</th>
             </tr>
           </thead>
           <tbody>
@@ -271,12 +271,12 @@
               </td>
               <td>
                 <span class="status-badge" :class="item.status">
-                  {{ item.status === 'healthy' ? 'Healthy' : 'Infected' }}
+                  {{ item.recordType === 'pest' ? t('pest') : item.status === 'healthy' ? t('healthy') : t('infected') }}
                 </span>
               </td>
               <td>
                 <div class="disease-cell">
-                  <span class="disease-name">{{ item.disease || 'None' }}</span>
+                  <span class="disease-name">{{ item.disease || t('none') }}</span>
                 </div>
               </td>
               <td>
@@ -299,20 +299,20 @@
               </td>
               <td>
                 <div class="action-buttons">
-                  <button @click="viewDetails(item)" class="table-btn view" title="View Details">
+                  <button @click="viewDetails(item)" class="table-btn view" :title="t('viewDetails')">
                     <svg viewBox="0 0 24 24" fill="none">
                       <path d="M1 12C1 12 5 4 12 4C19 4 23 12 23 12C23 12 19 20 12 20C5 20 1 12 1 12Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                       <path d="M12 15C13.6569 15 15 13.6569 15 12C15 10.3431 13.6569 9 12 9C10.3431 9 9 10.3431 9 12C9 13.6569 10.3431 15 12 15Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                     </svg>
                   </button>
-                  <button @click="downloadReport(item)" class="table-btn download" title="Download PDF Report">
+                  <button @click="downloadReport(item)" class="table-btn download" :title="t('downloadPdfReport')">
                     <svg viewBox="0 0 24 24" fill="none">
                       <path d="M21 15V19C21 19.5304 20.7893 20.0391 20.4142 20.4142C20.0391 20.7893 19.5304 21 19 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                       <path d="M7 10L12 15L17 10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                       <path d="M12 15V3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                     </svg>
                   </button>
-                  <button @click="deleteItem(item)" class="table-btn delete" title="Delete">
+                  <button @click="deleteItem(item)" class="table-btn delete" :title="t('delete')">
                     <svg viewBox="0 0 24 24" fill="none">
                       <path d="M3 6H21" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                       <path d="M19 6V20C19 20.5304 18.7893 21.0391 18.4142 21.4142C18.0391 21.7893 17.5304 22 17 22H7C6.46957 22 5.96086 21.7893 5.58579 21.4142C5.21071 21.0391 5 20.5304 5 20V6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
@@ -336,20 +336,20 @@
             <path d="M6 5H18C20.2091 5 22 6.79086 22 9V14C22 16.2091 20.2091 18 18 18H6C3.79086 18 2 16.2091 2 14V9C2 6.79086 3.79086 5 6 5Z" stroke="currentColor" stroke-width="1.5"/>
           </svg>
         </div>
-        <h3 v-if="hasActiveFilters">No matching analyses found</h3>
-        <h3 v-else>No analysis history yet</h3>
-        <p v-if="hasActiveFilters">Try adjusting your filters or search terms</p>
-        <p v-else>Upload your first cucumber leaf image to get started</p>
+        <h3 v-if="hasActiveFilters">{{ t('noMatchingAnalyses') }}</h3>
+        <h3 v-else>{{ t('noHistoryYet') }}</h3>
+        <p v-if="hasActiveFilters">{{ t('adjustHistorySearch') }}</p>
+        <p v-else>{{ t('uploadFirstImage') }}</p>
         <button @click="goToUpload" class="upload-btn">
           <svg viewBox="0 0 24 24" fill="none">
             <path d="M21 16V20C21 20.5304 20.7893 21.0391 20.4142 21.4142C20.0391 21.7893 19.5304 22 19 22H5C4.46957 22 3.96086 21.7893 3.58579 21.4142C3.21071 21.0391 3 20.5304 3 20V16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
             <path d="M17 8L12 3L7 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
             <path d="M12 3V15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
-          Upload First Image
+          {{ t('uploadFirst') }}
         </button>
         <button v-if="hasActiveFilters" @click="clearFilters" class="clear-filters-btn">
-          Clear All Filters
+          {{ t('clearAllFilters') }}
         </button>
       </div>
     </div>
@@ -367,7 +367,7 @@
           <rect x="14" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.5"/>
           <rect x="14" y="14" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.5"/>
         </svg>
-        Grid
+        {{ t('grid') }}
       </button>
       <button 
         @click="viewMode = 'table'"
@@ -381,7 +381,7 @@
           <path d="M9 3V21" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
           <path d="M15 3V21" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
         </svg>
-        Table
+        {{ t('table') }}
       </button>
     </div>
 
@@ -389,7 +389,7 @@
     <div v-if="selectedItem" class="modal-overlay" @click="closeModal">
       <div class="modal-content" @click.stop>
         <div class="modal-header">
-          <h3>Analysis Details</h3>
+          <h3>{{ t('analysisDetails') }}</h3>
           <button @click="closeModal" class="modal-close">
             <svg viewBox="0 0 24 24" fill="none">
               <path d="M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -406,38 +406,38 @@
           
           <div class="detail-info">
             <div class="detail-section">
-              <h4>File Information</h4>
+              <h4>{{ t('fileInformation') }}</h4>
               <div class="info-grid">
                 <div class="info-item">
-                  <span class="info-label">Filename:</span>
+                  <span class="info-label">{{ t('filename') }}:</span>
                   <span class="info-value">{{ selectedItem.filename }}</span>
                 </div>
                 <div class="info-item">
-                  <span class="info-label">File Size:</span>
+                  <span class="info-label">{{ t('fileSize') }}:</span>
                   <span class="info-value">{{ formatFileSize(selectedItem.fileSize) }}</span>
                 </div>
                 <div class="info-item">
-                  <span class="info-label">Upload Date:</span>
+                  <span class="info-label">{{ t('uploadDate') }}:</span>
                   <span class="info-value">{{ formatFullDate(selectedItem.uploadedAt) }}</span>
                 </div>
                 <div class="info-item">
-                  <span class="info-label">Analysis ID:</span>
+                  <span class="info-label">{{ t('analysisId') }}:</span>
                   <span class="info-value">{{ selectedItem.id }}</span>
                 </div>
               </div>
             </div>
             
             <div class="detail-section">
-              <h4>Analysis Results</h4>
+              <h4>{{ t('analysisResults') }}</h4>
               <div class="results-grid">
                 <div class="result-item status">
-                  <span class="result-label">Status:</span>
+                  <span class="result-label">{{ t('status') }}:</span>
                   <span class="result-value" :class="selectedItem.status">
-                    {{ selectedItem.status === 'healthy' ? 'Healthy' : 'Infected' }}
+                    {{ selectedItem.recordType === 'pest' ? t('pest') : selectedItem.status === 'healthy' ? t('healthy') : t('infected') }}
                   </span>
                 </div>
                 <div class="result-item confidence">
-                  <span class="result-label">Confidence:</span>
+                  <span class="result-label">{{ t('confidence') }}:</span>
                   <span class="result-value">{{ selectedItem.confidence }}%</span>
                   <div class="confidence-bar">
                     <div 
@@ -448,14 +448,14 @@
                   </div>
                 </div>
                 <div class="result-item disease">
-                  <span class="result-label">Detected Disease:</span>
-                  <span class="result-value">{{ selectedItem.disease || 'None' }}</span>
+                  <span class="result-label">{{ t(selectedItem.recordType === 'pest' ? 'detectedPest' : 'detectedDisease') }}:</span>
+                  <span class="result-value">{{ selectedItem.disease || t('none') }}</span>
                 </div>
               </div>
             </div>
             
             <div v-if="selectedItem.symptoms && selectedItem.symptoms.length > 0" class="detail-section">
-              <h4>Symptoms Identified</h4>
+              <h4>{{ t('symptomsIdentified') }}</h4>
               <ul class="symptoms-list">
                 <li v-for="(symptom, index) in selectedItem.symptoms" :key="index">
                   {{ symptom }}
@@ -464,7 +464,7 @@
             </div>
             
             <div v-if="selectedItem.recommendations && selectedItem.recommendations.length > 0" class="detail-section">
-              <h4>Recommendations</h4>
+              <h4>{{ t('recommendations') }}</h4>
               <ul class="recommendations-list">
                 <li v-for="(rec, index) in selectedItem.recommendations" :key="index">
                   <svg viewBox="0 0 24 24" fill="none">
@@ -477,7 +477,7 @@
             </div>
             
             <div class="detail-section">
-              <h4>Actions</h4>
+              <h4>{{ t('actions') }}</h4>
               <div class="action-buttons">
                 <button @click="downloadReport(selectedItem)" class="modal-btn download">
                   <svg viewBox="0 0 24 24" fill="none">
@@ -485,7 +485,7 @@
                     <path d="M7 10L12 15L17 10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                     <path d="M12 15V3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                   </svg>
-                  Download PDF Report
+                  {{ t('downloadPdfReport') }}
                 </button>
                 <button @click="reanalyzeItem(selectedItem)" class="modal-btn reanalyze">
                   <svg viewBox="0 0 24 24" fill="none">
@@ -494,7 +494,7 @@
                     <path d="M20.49 9C19.9828 7.56678 19.1209 6.2854 17.9845 5.27542C16.8482 4.26543 15.4745 3.55976 14 3.22" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                     <path d="M3.51 15C4.0172 16.4332 4.87907 17.7146 6.01547 18.7246C7.15186 19.7346 8.52549 20.4402 10 20.78" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                   </svg>
-                  Reanalyze
+                  {{ t('reanalyze') }}
                 </button>
                 <button @click="deleteItem(selectedItem)" class="modal-btn delete">
                   <svg viewBox="0 0 24 24" fill="none">
@@ -502,7 +502,7 @@
                     <path d="M19 6V20C19 20.5304 18.7893 21.0391 18.4142 21.4142C18.0391 21.7893 17.5304 22 17 22H7C6.46957 22 5.96086 21.7893 5.58579 21.4142C5.21071 21.0391 5 20.5304 5 20V6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                     <path d="M8 6V4C8 3.46957 8.21071 2.96086 8.58579 2.58579C8.96086 2.21071 9.46957 2 10 2H14C14.5304 2 15.0391 2.21071 15.4142 2.58579C15.7893 2.96086 16 3.46957 16 4V6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                   </svg>
-                  Delete
+                  {{ t('delete') }}
                 </button>
               </div>
             </div>
@@ -510,13 +510,56 @@
         </div>
       </div>
     </div>
+
+    <div v-if="showReportOptions" class="modal-overlay" @click.self="cancelReportOptions">
+      <section class="modal-content report-options-dialog" role="dialog" aria-modal="true">
+        <div class="modal-header">
+          <h3>{{ t(reportRequest.mode === 'single' ? 'reportOptionsSingle' : 'reportOptionsBatch') }}</h3>
+          <button class="modal-close" :aria-label="t('close')" @click="cancelReportOptions">×</button>
+        </div>
+        <div class="report-options-body">
+          <p>{{ t('chooseReportContent') }}</p>
+          <fieldset v-if="reportRequest.mode === 'single'" class="report-options-group">
+            <legend>{{ t('reportSections') }}</legend>
+            <label v-for="option in availableSingleReportOptions" :key="option.key" class="report-option">
+              <input v-model="reportOptions[option.key]" type="checkbox" />
+              <span>{{ t(option.labelKey) }}</span>
+            </label>
+          </fieldset>
+          <template v-else>
+            <fieldset class="report-options-group">
+              <legend>{{ t('reportSections') }}</legend>
+              <label class="report-option">
+                <input v-model="reportOptions.includeSummary" type="checkbox" />
+                <span>{{ t('reportIncludeSummary') }}</span>
+              </label>
+            </fieldset>
+            <fieldset class="report-options-group">
+              <legend>{{ t('reportColumns') }}</legend>
+              <label v-for="option in batchReportOptions" :key="option.key" class="report-option">
+                <input v-model="reportOptions[option.key]" type="checkbox" />
+                <span>{{ t(option.labelKey) }}</span>
+              </label>
+            </fieldset>
+          </template>
+          <p v-if="!hasSelectedReportContent" class="report-options-hint">{{ t('noReportSectionsSelected') }}</p>
+        </div>
+        <div class="report-dialog-actions">
+          <button class="refresh-btn" @click="cancelReportOptions">{{ t('cancel') }}</button>
+          <button class="action-btn download" :disabled="!hasSelectedReportContent" @click="generateSelectedReport">
+            {{ t('generatePdf') }}
+          </button>
+        </div>
+      </section>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../store/auth'
+import { useLanguage } from '../store/language'
 import { db } from '../firebase'
 import { 
   collection, 
@@ -533,6 +576,7 @@ import autoTable from 'jspdf-autotable'
 
 const router = useRouter()
 const authStore = useAuthStore()
+const { t } = useLanguage()
 
 // State
 const viewMode = ref('grid')
@@ -543,21 +587,87 @@ const activeFilters = ref({
 const activeDateRange = ref('all')
 const sortBy = ref('date-desc')
 const selectedItem = ref(null)
+const showReportOptions = ref(false)
+const reportRequest = ref({ mode: 'single', items: [], returnToDetails: false })
+const reportOptions = reactive({
+  includeImage: true,
+  includeFileInfo: true,
+  includeResults: true,
+  includeSymptoms: true,
+  includeRecommendations: true,
+  includeSummary: true,
+  includeFilename: true,
+  includeStatus: true,
+  includeDisease: true,
+  includeConfidence: true,
+  includeDate: true
+})
+const singleReportOptions = [
+  { key: 'includeImage', labelKey: 'reportIncludeImage' },
+  { key: 'includeFileInfo', labelKey: 'reportIncludeFileInfo' },
+  { key: 'includeResults', labelKey: 'reportIncludeResults' },
+  { key: 'includeSymptoms', labelKey: 'reportIncludeSymptoms' },
+  { key: 'includeRecommendations', labelKey: 'reportIncludeRecommendations' }
+]
+const availableSingleReportOptions = computed(() => singleReportOptions.filter(option => (
+  option.key !== 'includeImage' || Boolean(reportRequest.value.items[0]?.image)
+)))
+const batchReportOptions = [
+  { key: 'includeFilename', labelKey: 'reportIncludeFilename' },
+  { key: 'includeStatus', labelKey: 'reportIncludeStatus' },
+  { key: 'includeDisease', labelKey: 'reportIncludeDisease' },
+  { key: 'includeConfidence', labelKey: 'reportIncludeConfidence' },
+  { key: 'includeDate', labelKey: 'reportIncludeDate' }
+]
+const hasSelectedReportContent = computed(() => {
+  const options = reportRequest.value.mode === 'single'
+    ? availableSingleReportOptions.value
+    : [{ key: 'includeSummary' }, ...batchReportOptions]
+  return options.some(option => reportOptions[option.key])
+})
 const loading = ref(true)
 const history = ref([]) // Will store ALL data from Firebase
 
 // Filters and constants
 const statusFilters = ref([
-  { id: 'healthy', label: 'Healthy', color: '#10b981' },
-  { id: 'infected', label: 'Infected', color: '#ef4444' }
+  { id: 'healthy', labelKey: 'healthy', color: '#10b981' },
+  { id: 'infected', labelKey: 'infected', color: '#ef4444' },
+  { id: 'pest', labelKey: 'pest', color: '#f59e0b' }
 ])
 
 const dateRanges = ref([
-  { id: 'today', label: 'Today' },
-  { id: 'week', label: 'This Week' },
-  { id: 'month', label: 'This Month' },
-  { id: 'all', label: 'All Time' }
+  { id: 'today', labelKey: 'today' },
+  { id: 'week', labelKey: 'thisWeek' },
+  { id: 'month', labelKey: 'thisMonth' },
+  { id: 'all', labelKey: 'allTime' }
 ])
+
+const openReportOptions = (items, mode) => {
+  reportRequest.value = {
+    mode,
+    items: [...items],
+    returnToDetails: Boolean(selectedItem.value)
+  }
+  selectedItem.value = null
+  showReportOptions.value = true
+}
+
+const cancelReportOptions = () => {
+  showReportOptions.value = false
+  if (reportRequest.value.returnToDetails) {
+    selectedItem.value = reportRequest.value.items[0] || null
+  }
+}
+
+const generateSelectedReport = async () => {
+  const { mode, items } = reportRequest.value
+  showReportOptions.value = false
+  if (mode === 'single') {
+    await generateSingleReport(items[0], { ...reportOptions })
+  } else {
+    await generateBatchReport(items, { ...reportOptions })
+  }
+}
 
 // Computed properties
 const healthyCount = computed(() => {
@@ -714,10 +824,36 @@ const loadUserHistory = async () => {
         console.log(`📄 Processing document ${doc.id}:`, data)
         
         // Format for display
-        const formattedItem = formatDocument(doc.id, data)
+        const formattedItem = formatDocument(doc.id, data, 'uploads')
         if (formattedItem) {
           uploads.push(formattedItem)
           processedIds.add(doc.id)
+        }
+      })
+    })
+
+    const pestScansRef = collection(db, 'pestScans')
+    const pestQueries = [query(pestScansRef, where('userId', '==', userId))]
+    if (userEmail) {
+      pestQueries.push(query(pestScansRef, where('userEmail', '==', userEmail)))
+    }
+    const pestSnapshots = await Promise.all(
+      pestQueries.map(q => getDocs(q).catch(error => {
+        console.error('Pest history query error:', error)
+        return { empty: true, forEach: () => {} }
+      }))
+    )
+
+    pestSnapshots.forEach(snapshot => {
+      if (snapshot.empty) return
+      snapshot.forEach(pestDoc => {
+        const recordKey = `pestScans:${pestDoc.id}`
+        if (processedIds.has(recordKey)) return
+
+        const formattedItem = formatDocument(pestDoc.id, pestDoc.data(), 'pestScans')
+        if (formattedItem) {
+          uploads.push(formattedItem)
+          processedIds.add(recordKey)
         }
       })
     })
@@ -742,16 +878,20 @@ const loadUserHistory = async () => {
 }
 
 // Helper function to format document
-const formatDocument = (id, data) => {
+const formatDocument = (id, data, collectionName = 'uploads') => {
   try {
     const filename = data.fileName || data.filename || `analysis_${id.substring(0, 8)}`
+    const isPestScan = collectionName === 'pestScans' || data.scanType === 'pest'
+    const displayResult = isPestScan ? data.pest : data.disease
 
     // Get status (handle different field names)
-    let status = 'unknown'
-    if (data.status) status = data.status.toLowerCase()
-    else if (data.result) status = data.result.toLowerCase()
-    else if (data.disease === 'healthy') status = 'healthy'
-    else if (data.disease && data.disease !== 'healthy') status = 'infected'
+    let status = isPestScan ? 'pest' : 'unknown'
+    if (!isPestScan) {
+      if (data.status) status = data.status.toLowerCase()
+      else if (data.result) status = data.result.toLowerCase()
+      else if (data.disease === 'healthy') status = 'healthy'
+      else if (data.disease && data.disease !== 'healthy') status = 'infected'
+    }
     
     // Get confidence (handle different formats)
     let confidence = 0
@@ -794,15 +934,18 @@ const formatDocument = (id, data) => {
     }
     
     return {
-      id: id,
+      id: isPestScan ? `pest-${id}` : id,
+      firestoreId: id,
+      collectionName,
+      recordType: isPestScan ? 'pest' : 'disease',
       filename,
       fileSize: data.fileSize || 0,
       image: image,
       status: status,
       confidence: confidence,
-      disease: formatDiseaseName(data.disease),
-      symptoms: getSymptomsForDisease(data.disease),
-      recommendations: getRecommendationsForDisease(data.disease),
+      disease: formatDiseaseName(displayResult),
+      symptoms: data.symptoms || (isPestScan ? [] : getSymptomsForDisease(data.disease)),
+      recommendations: data.recommendations || (isPestScan ? [] : getRecommendationsForDisease(data.disease)),
       uploadedAt: uploadedAt,
       processingTime: data.processingTime || 2.5,
       originalData: data
@@ -815,7 +958,7 @@ const formatDocument = (id, data) => {
 
 // Helper functions
 const formatDiseaseName = (disease) => {
-  if (!disease || disease === 'healthy') return 'Healthy'
+  if (!disease || disease === 'healthy') return t('healthy')
   
   // Convert snake_case to Proper Case
   return disease
@@ -904,7 +1047,7 @@ const clearFilters = () => {
 
 // Formatting methods
 const formatFilename = (filename) => {
-  if (!filename) return 'Unknown'
+  if (!filename) return t('unknown')
   if (filename.length > 20) {
     return filename.substring(0, 17) + '...'
   }
@@ -912,7 +1055,7 @@ const formatFilename = (filename) => {
 }
 
 const formatDate = (date) => {
-  if (!date) return 'Unknown'
+  if (!date) return t('unknown')
   
   try {
     const now = new Date()
@@ -920,7 +1063,7 @@ const formatDate = (date) => {
     
     // Check if date is valid
     if (isNaN(itemDate.getTime())) {
-      return 'Invalid date'
+      return t('invalidDate')
     }
     
     const diffMs = now - itemDate
@@ -929,49 +1072,49 @@ const formatDate = (date) => {
     const diffDays = Math.floor(diffMs / 86400000)
 
     if (diffMins < 60) {
-      return `${diffMins}m ago`
+      return t('minutesAgo', { count: diffMins })
     } else if (diffHours < 24) {
-      return `${diffHours}h ago`
+      return t('hoursAgo', { count: diffHours })
     } else if (diffDays < 7) {
-      return `${diffDays}d ago`
+      return t('daysAgo', { count: diffDays })
     } else {
       const options = { month: 'short', day: 'numeric' }
       if (diffDays > 365) {
         options.year = 'numeric'
       }
-      return itemDate.toLocaleDateString('en-US', options)
+      return itemDate.toLocaleDateString(t('locale'), options)
     }
   } catch (error) {
     console.error('Error formatting date:', error, date)
-    return 'Invalid date'
+    return t('invalidDate')
   }
 }
 
 const formatTime = (date) => {
-  if (!date) return 'Unknown'
+  if (!date) return t('unknown')
   try {
     const itemDate = date instanceof Date ? date : new Date(date)
     if (isNaN(itemDate.getTime())) {
-      return 'Invalid time'
+      return t('invalidTime')
     }
-    return itemDate.toLocaleTimeString('en-US', { 
+    return itemDate.toLocaleTimeString(t('locale'), { 
       hour: '2-digit', 
       minute: '2-digit' 
     })
   } catch (error) {
     console.error('Error formatting time:', error, date)
-    return 'Invalid time'
+    return t('invalidTime')
   }
 }
 
 const formatFullDate = (date) => {
-  if (!date) return 'Unknown'
+  if (!date) return t('unknown')
   try {
     const itemDate = date instanceof Date ? date : new Date(date)
     if (isNaN(itemDate.getTime())) {
-      return 'Invalid date'
+      return t('invalidDate')
     }
-    return itemDate.toLocaleDateString('en-US', {
+    return itemDate.toLocaleDateString(t('locale'), {
       weekday: 'long',
       year: 'numeric',
       month: 'long',
@@ -981,24 +1124,26 @@ const formatFullDate = (date) => {
     })
   } catch (error) {
     console.error('Error formatting full date:', error, date)
-    return 'Invalid date'
+    return t('invalidDate')
   }
 }
 
 const formatFileSize = (bytes) => {
-  if (!bytes || bytes === 0) return '0 Bytes'
+  if (!bytes || bytes === 0) return `0 ${t('bytes')}`
   try {
     const k = 1024
-    const sizes = ['Bytes', 'KB', 'MB', 'GB']
+    const sizes = [t('bytes'), 'KB', 'MB', 'GB']
     const i = Math.floor(Math.log(bytes) / Math.log(k))
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
   } catch (error) {
-    return 'Unknown size'
+    return t('unknownSize')
   }
 }
 
 // PDF Report Generation
-const downloadReport = async (item) => {
+const downloadReport = (item) => openReportOptions([item], 'single')
+
+const generateSingleReport = async (item, options) => {
   try {
     // Show loading state (optional)
     console.log('Generating PDF report...')
@@ -1008,9 +1153,9 @@ const downloadReport = async (item) => {
     
     // Set document properties
     doc.setProperties({
-      title: `Cucumber Analysis Report - ${item.filename}`,
-      subject: 'Disease Detection Results',
-      author: 'Cucumber Disease Detection System',
+      title: `${t('reportTitle')} - ${item.filename}`,
+      subject: t('analysisResults'),
+      author: t('appName'),
       keywords: 'cucumber, disease, analysis'
     })
     
@@ -1021,7 +1166,7 @@ const downloadReport = async (item) => {
     doc.setTextColor(255, 255, 255)
     doc.setFontSize(24)
     doc.setFont('helvetica', 'bold')
-    doc.text('Cucumber Disease Analysis Report', 14, 25)
+    doc.text(t('reportTitle'), 14, 25)
     
     // Reset text color for rest of document
     doc.setTextColor(0, 0, 0)
@@ -1029,13 +1174,13 @@ const downloadReport = async (item) => {
     // Report metadata
     doc.setFontSize(10)
     doc.setTextColor(100, 116, 139) // #64748b color
-    doc.text(`Report Generated: ${new Date().toLocaleString()}`, 14, 50)
-    doc.text(`Analysis ID: ${item.id}`, 14, 58)
+    doc.text(`${t('reportDateGenerated')}: ${new Date().toLocaleString(t('locale'))}`, 14, 50)
+    doc.text(`${t('analysisId')}: ${item.id}`, 14, 58)
     
     // Add image if available
     let yPos = 70
     
-    if (item.image) {
+    if (options.includeImage && item.image) {
       try {
         // Add image to PDF
         const imgWidth = 100
@@ -1048,48 +1193,56 @@ const downloadReport = async (item) => {
       }
     }
     
-    // File Information Table
-    autoTable(doc, {
-      startY: yPos,
-      head: [['File Information', '']],
-      body: [
-        ['Filename', item.filename],
-        ['File Size', formatFileSize(item.fileSize)],
-        ['Upload Date', formatFullDate(item.uploadedAt)],
-        ['Processing Time', `${item.processingTime || 2.5} seconds`]
-      ],
-      theme: 'striped',
-      headStyles: { fillColor: [16, 185, 129], textColor: [255, 255, 255], fontSize: 12, fontStyle: 'bold' },
-      columnStyles: { 0: { fontStyle: 'bold', cellWidth: 80 } }
-    })
+    if (options.includeFileInfo) {
+      autoTable(doc, {
+        startY: yPos,
+        head: [[t('fileInformation'), '']],
+        body: [
+          [t('filename'), item.filename],
+          [t('fileSize'), formatFileSize(item.fileSize)],
+          [t('uploadDate'), formatFullDate(item.uploadedAt)],
+          [t('processingTime'), `${item.processingTime || 2.5} ${t('seconds')}`]
+        ],
+        theme: 'striped',
+        headStyles: { fillColor: [16, 185, 129], textColor: [255, 255, 255], fontSize: 12, fontStyle: 'bold' },
+        columnStyles: { 0: { fontStyle: 'bold', cellWidth: 80 } }
+      })
+      yPos = doc.lastAutoTable.finalY + 10
+    }
     
-    // Analysis Results Table
-    autoTable(doc, {
-      head: [['Analysis Results', '']],
-      body: [
-        ['Status', item.status === 'healthy' ? '🌿 Healthy' : '⚠️ Infected'],
-        ['Confidence', `${item.confidence}%`],
-        ['Detected Disease', item.disease || 'None']
-      ],
-      theme: 'striped',
-      headStyles: { fillColor: [16, 185, 129], textColor: [255, 255, 255], fontSize: 12, fontStyle: 'bold' },
-      columnStyles: { 0: { fontStyle: 'bold', cellWidth: 80 } }
-    })
+    if (options.includeResults) {
+      autoTable(doc, {
+        startY: yPos,
+        head: [[t('analysisResults'), '']],
+        body: [
+          [t('status'), item.recordType === 'pest' ? t('pest') : item.status === 'healthy' ? t('healthy') : t('infected')],
+          [t('confidence'), `${item.confidence}%`],
+          [t(item.recordType === 'pest' ? 'detectedPest' : 'detectedDisease'), item.disease || t('none')]
+        ],
+        theme: 'striped',
+        headStyles: { fillColor: [16, 185, 129], textColor: [255, 255, 255], fontSize: 12, fontStyle: 'bold' },
+        columnStyles: { 0: { fontStyle: 'bold', cellWidth: 80 } }
+      })
+      yPos = doc.lastAutoTable.finalY + 10
+    }
     
     // Symptoms Table
-    if (item.symptoms && item.symptoms.length > 0) {
+    if (options.includeSymptoms && item.symptoms && item.symptoms.length > 0) {
       autoTable(doc, {
-        head: [['Identified Symptoms']],
+        startY: yPos,
+        head: [[t('symptomsIdentified')]],
         body: item.symptoms.map(symptom => [symptom]),
         theme: 'striped',
         headStyles: { fillColor: [16, 185, 129], textColor: [255, 255, 255], fontSize: 12, fontStyle: 'bold' }
       })
+      yPos = doc.lastAutoTable.finalY + 10
     }
     
     // Recommendations Table
-    if (item.recommendations && item.recommendations.length > 0) {
+    if (options.includeRecommendations && item.recommendations && item.recommendations.length > 0) {
       autoTable(doc, {
-        head: [['Recommendations']],
+        startY: yPos,
+        head: [[t('recommendations')]],
         body: item.recommendations.map(rec => [rec]),
         theme: 'striped',
         headStyles: { fillColor: [16, 185, 129], textColor: [255, 255, 255], fontSize: 12, fontStyle: 'bold' }
@@ -1109,12 +1262,12 @@ const downloadReport = async (item) => {
         { align: 'center' }
       )
       doc.text(
-        'Cucumber Disease Detection System',
+        t('appName'),
         14,
         doc.internal.pageSize.height - 10
       )
       doc.text(
-        new Date().toLocaleDateString(),
+        new Date().toLocaleDateString(t('locale')),
         doc.internal.pageSize.width - 40,
         doc.internal.pageSize.height - 10
       )
@@ -1128,12 +1281,14 @@ const downloadReport = async (item) => {
     
   } catch (error) {
     console.error('Error generating PDF:', error)
-    alert('Failed to generate PDF report. Please try again.')
+    alert(t('pdfFailed'))
   }
 }
 
 // Batch PDF Report Generation
-const downloadBatchReport = async (items) => {
+const downloadBatchReport = (items) => openReportOptions(items, 'batch')
+
+const generateBatchReport = async (items, options) => {
   if (!items || items.length === 0) return
   
   try {
@@ -1145,52 +1300,65 @@ const downloadBatchReport = async (items) => {
     doc.setTextColor(255, 255, 255)
     doc.setFontSize(24)
     doc.setFont('helvetica', 'bold')
-    doc.text('Batch Analysis Report', 14, 25)
+    doc.text(t('batchReportTitle'), 14, 25)
     
     doc.setTextColor(0, 0, 0)
     doc.setFontSize(10)
     doc.setTextColor(100, 116, 139)
-    doc.text(`Report Generated: ${new Date().toLocaleString()}`, 14, 50)
-    doc.text(`Total Analyses: ${items.length}`, 14, 58)
+    doc.text(`${t('reportDateGenerated')}: ${new Date().toLocaleString(t('locale'))}`, 14, 50)
+    doc.text(`${t('totalAnalyses')}: ${items.length}`, 14, 58)
     
+    let tableStartY = 70
+
     // Summary statistics
     const healthyCount = items.filter(i => i.status === 'healthy').length
     const infectedCount = items.filter(i => i.status === 'infected').length
-    
-    autoTable(doc, {
-      startY: 70,
-      head: [['Summary Statistics', '']],
-      body: [
-        ['Total Images', items.length],
-        ['Healthy Plants', healthyCount],
-        ['Infected Plants', infectedCount]
-      ],
-      theme: 'striped',
-      headStyles: { fillColor: [16, 185, 129], textColor: [255, 255, 255] }
-    })
-    
-    // Detailed results table
-    const tableData = items.map(item => [
-      item.filename.substring(0, 20) + (item.filename.length > 20 ? '...' : ''),
-      item.status === 'healthy' ? 'Healthy' : 'Infected',
-      item.disease || 'None',
-      `${item.confidence}%`,
-      formatDate(item.uploadedAt)
-    ])
-    
-    autoTable(doc, {
-      head: [['Filename', 'Status', 'Disease', 'Confidence', 'Date']],
-      body: tableData,
-      theme: 'striped',
-      headStyles: { fillColor: [16, 185, 129], textColor: [255, 255, 255] },
-      columnStyles: {
-        0: { cellWidth: 60 },
-        1: { cellWidth: 30 },
-        2: { cellWidth: 50 },
-        3: { cellWidth: 30 },
-        4: { cellWidth: 40 }
-      }
-    })
+    const pestCount = items.filter(i => i.recordType === 'pest').length
+
+    if (options.includeSummary) {
+      autoTable(doc, {
+        startY: tableStartY,
+        head: [[t('reportSummary'), '']],
+        body: [
+          [t('totalImages'), items.length],
+          [t('healthyPlants'), healthyCount],
+          [t('infectedPlants'), infectedCount],
+          [t('pestScansCount'), pestCount]
+        ],
+        theme: 'striped',
+        headStyles: { fillColor: [16, 185, 129], textColor: [255, 255, 255] }
+      })
+      tableStartY = doc.lastAutoTable.finalY + 10
+    }
+
+    const columns = [
+      {
+        key: 'includeFilename',
+        label: t('filename'),
+        value: item => {
+          const filename = item.filename || t('unknown')
+          return filename.substring(0, 20) + (filename.length > 20 ? '...' : '')
+        }
+      },
+      {
+        key: 'includeStatus',
+        label: t('status'),
+        value: item => item.recordType === 'pest' ? t('pest') : item.status === 'healthy' ? t('healthy') : t('infected')
+      },
+      { key: 'includeDisease', label: t('pestOrDisease'), value: item => item.disease || t('none') },
+      { key: 'includeConfidence', label: t('confidence'), value: item => `${item.confidence}%` },
+      { key: 'includeDate', label: t('date'), value: item => formatDate(item.uploadedAt) }
+    ].filter(column => options[column.key])
+
+    if (columns.length > 0) {
+      autoTable(doc, {
+        startY: tableStartY,
+        head: [columns.map(column => column.label)],
+        body: items.map(item => columns.map(column => column.value(item))),
+        theme: 'striped',
+        headStyles: { fillColor: [16, 185, 129], textColor: [255, 255, 255] }
+      })
+    }
     
     // Add footer with page numbers
     const pageCount = doc.internal.getNumberOfPages()
@@ -1205,7 +1373,7 @@ const downloadBatchReport = async (items) => {
         { align: 'center' }
       )
       doc.text(
-        'Cucumber Disease Detection System',
+        t('appName'),
         14,
         doc.internal.pageSize.height - 10
       )
@@ -1215,7 +1383,7 @@ const downloadBatchReport = async (items) => {
     
   } catch (error) {
     console.error('Error generating batch PDF:', error)
-    alert('Failed to generate batch PDF report.')
+    alert(t('batchPdfFailed'))
   }
 }
 
@@ -1230,10 +1398,10 @@ const closeModal = () => {
 
 // Real delete from Firebase
 const deleteItem = async (item) => {
-  if (confirm('Are you sure you want to delete this analysis? This action cannot be undone.')) {
+  if (confirm(t('deleteAnalysisConfirm'))) {
     try {
       // Delete from Firebase
-      await deleteDoc(doc(db, 'uploads', item.id))
+      await deleteDoc(doc(db, item.collectionName || 'uploads', item.firestoreId || item.id))
       
       // Remove from local state
       const index = history.value.findIndex(h => h.id === item.id)
@@ -1242,11 +1410,11 @@ const deleteItem = async (item) => {
       }
       
       closeModal()
-      alert('Analysis deleted successfully!')
+      alert(t('analysisDeleted'))
       
     } catch (error) {
       console.error('Error deleting document:', error)
-      alert('Failed to delete analysis. Please try again.')
+      alert(t('deleteFailed'))
     }
   }
 }
@@ -2279,6 +2447,86 @@ tbody tr:hover {
   max-height: 90vh;
   overflow-y: auto;
   box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+}
+
+.report-options-dialog {
+  max-width: 560px;
+}
+
+.report-options-dialog .modal-header {
+  padding: 18px 24px;
+}
+
+.report-options-dialog .modal-header h3 {
+  font-size: 1.2rem;
+}
+
+.report-options-body {
+  max-height: 65vh;
+  overflow-y: auto;
+  padding: 20px 24px 4px;
+}
+
+.report-options-body > p:first-child {
+  margin: 0 0 18px;
+  color: #52645b;
+  font-size: .9rem;
+}
+
+.report-options-group {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  padding: 0;
+  margin: 0 0 18px;
+  border: 0;
+}
+
+.report-options-group legend {
+  grid-column: 1 / -1;
+  padding: 0;
+  margin-bottom: 8px;
+  color: #263a30;
+  font-size: .82rem;
+  font-weight: 750;
+}
+
+.report-option {
+  min-height: 42px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 10px;
+  color: #34483e;
+  border: 1px solid #dce8e1;
+  border-radius: 7px;
+  font-size: .84rem;
+  cursor: pointer;
+}
+
+.report-option input {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 auto;
+  accent-color: #13845f;
+}
+
+.report-options-hint {
+  margin: 0 0 12px;
+  color: #a43b3b;
+  font-size: .82rem;
+}
+
+.report-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 14px 24px 20px;
+}
+
+.report-dialog-actions button:disabled {
+  cursor: not-allowed;
+  opacity: .5;
 }
 
 .modal-header {

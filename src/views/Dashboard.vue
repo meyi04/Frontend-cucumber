@@ -33,7 +33,7 @@
           </div>
 
           <!-- Notification Bell -->
-          <div class="notification-bell" @click="toggleNotifications" ref="notificationRef">
+            <div class="notification-bell" :class="{ active: showNotifications }" @click="toggleNotifications" @keydown.enter.prevent="toggleNotifications" @keydown.space.prevent="toggleNotifications" ref="notificationRef" role="button" tabindex="0" :aria-expanded="showNotifications" aria-haspopup="dialog" :aria-label="notificationCount ? t('notificationUnread', { count: notificationCount }) : t('notifications')">
             <svg viewBox="0 0 24 24" fill="none">
               <path d="M18 8C18 6.4087 17.3679 4.88258 16.2426 3.75736C15.1174 2.63214 13.5913 2 12 2C10.4087 2 8.88258 2.63214 7.75736 3.75736C6.63214 4.88258 6 6.4087 6 8C6 15 3 17 3 17H21C21 17 18 15 18 8Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
               <path d="M13.73 21C13.5542 21.3031 13.3019 21.5547 12.9982 21.7295C12.6946 21.9044 12.3504 21.9965 12 21.9965C11.6496 21.9965 11.3054 21.9044 11.0018 21.7295C10.6982 21.5547 10.4458 21.3031 10.27 21" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
@@ -41,9 +41,13 @@
             <span class="notification-badge" v-if="notificationCount > 0">{{ notificationCount }}</span>
 
             <!-- Notification Dropdown -->
-            <div v-if="showNotifications" class="notification-dropdown">
+            <div v-if="showNotifications" class="notification-dropdown" role="dialog" :aria-label="t('notifications')" @click.stop>
               <div class="dropdown-header">
-                <h4>{{ t('notifications') }}</h4>
+                <div>
+                  <h4>{{ t('notifications') }}</h4>
+                  <p v-if="notificationCount" class="notification-summary">{{ t('notificationUpdates', { count: notificationCount }) }}</p>
+                  <p v-else class="notification-summary">{{ t('allCaughtUp') }}</p>
+                </div>
                 <button @click.stop="markAllAsRead" class="mark-read" :disabled="notificationCount === 0">
                   {{ t('markAllRead') }}
                 </button>
@@ -70,7 +74,7 @@
                   </div>
                 </template>
                 <div v-else class="notification-empty">
-                  <p>{{ t('noNewNotifications') || 'No new notifications' }}</p>
+                  <p>{{ t('noNewNotifications') }}</p>
                 </div>
               </div>
               <div class="dropdown-footer">
@@ -350,29 +354,8 @@ const selectedTimeRange = ref('7D')
 const animationTimer = ref(null)
 
 // Notifications data
-const notifications = ref([
-  {
-    id: 1,
-    type: 'success',
-    message: 'Analysis completed successfully',
-    time: '2 min ago',
-    read: false
-  },
-  {
-    id: 2,
-    type: 'warning',
-    message: 'High infection rate detected',
-    time: '15 min ago',
-    read: false
-  },
-  {
-    id: 3,
-    type: 'info',
-    message: 'System update available',
-    time: '1 hour ago',
-    read: true
-  }
-])
+// Notifications are populated only from the live listener below.
+const notifications = ref([])
 
 const notificationCount = computed(() => notifications.value.filter(n => !n.read).length)
 const unreadNotifications = computed(() => notifications.value.filter(n => !n.read))
@@ -381,7 +364,7 @@ let notificationsUnsub = null
 
 // User data
 const userName = computed(() => {
-  return authStore.user?.displayName || authStore.user?.email?.split('@')[0] || 'Farmer'
+  return authStore.user?.displayName || authStore.user?.email?.split('@')[0] || t('farmer')
 })
 
 const userInitials = computed(() => {
@@ -428,10 +411,10 @@ const accuracyPercent = computed(() => {
 })
 
 const averageProcessingTime = computed(() => {
-  if (!userHistory.value.length) return '0.0 seconds'
+  if (!userHistory.value.length) return `0.0 ${t('seconds')}`
   const totalSeconds = userHistory.value.reduce((sum, item) => sum + (item.processingTime || 0), 0)
   const avg = totalSeconds / userHistory.value.length
-  return `${avg.toFixed(1)} seconds`
+  return `${avg.toFixed(1)} ${t('seconds')}`
 })
 
 const lastAnalysisDate = computed(() => {
@@ -789,7 +772,8 @@ onMounted(() => {
   box-shadow: 0 28px 80px rgba(15, 23, 42, 0.08);
   border: 1px solid rgba(16, 185, 129, 0.12);
   position: relative;
-  overflow: hidden;
+  /* Let menus anchored inside the header extend beyond the card. */
+  overflow: visible;
 }
 
 .dashboard-header::before {
@@ -1110,6 +1094,36 @@ onMounted(() => {
 .dropdown-footer button:hover {
   color: #047857;
 }
+
+/* Refined notification panel */
+.notification-bell {
+  background: linear-gradient(145deg, #ffffff, #f4f8f6);
+  border-color: #dbe8e1;
+  border-radius: 15px;
+  box-shadow: 0 3px 10px rgba(15, 59, 42, 0.04);
+  transition: color .2s ease, border-color .2s ease, box-shadow .2s ease, transform .2s ease;
+}
+.notification-bell.active { color: #07845e; background: #fff; border-color: #8bd6b7; box-shadow: 0 0 0 4px rgba(16,185,129,.12), 0 12px 28px rgba(15,98,69,.12); }
+.notification-bell:focus-visible { outline: 3px solid rgba(16,185,129,.35); outline-offset: 3px; }
+.notification-badge { background: linear-gradient(135deg, #fb5b63, #dc2626); box-shadow: 0 2px 7px rgba(220,38,38,.32); }
+.notification-dropdown { width: min(380px, calc(100vw - 32px)); margin-top: 12px; background: rgba(255,255,255,.98); border-color: #dce9e2; border-radius: 20px; box-shadow: 0 24px 60px rgba(15,53,39,.2), 0 5px 16px rgba(15,23,42,.08); }
+.dropdown-header { padding: 18px 18px 16px; border-bottom-color: #e6efe9; background: linear-gradient(135deg, #f5fbf7, #fbfdfc); }
+.notification-summary { margin: 4px 0 0; color: #769084; font-size: .72rem; font-weight: 500; }
+.mark-read { border-radius: 9px; transition: background .2s ease, color .2s ease; }
+.mark-read:disabled { color: #a7b8af; cursor: not-allowed; }
+.mark-read:disabled:hover { background: transparent; }
+.notification-list { max-height: min(352px, 52vh); }
+.notification-item { gap: 12px; padding: 15px 18px; border-bottom-color: #edf3ef; transition: background .2s ease, transform .2s ease; }
+.notification-item:hover { background: #f7fbf8; }
+.notification-item.unread { background: linear-gradient(90deg, rgba(16,185,129,.1), rgba(255,255,255,0)); }
+.notification-item.unread::before { content: ''; position: absolute; left: 0; top: 14px; bottom: 14px; width: 3px; background: #10b981; border-radius: 0 4px 4px 0; }
+.notification-empty { padding: 38px 16px; }
+.notif-icon { width: 36px; height: 36px; flex: 0 0 36px; display: grid; place-items: center; border-radius: 12px; }
+.notif-content { min-width: 0; }
+.notif-message { font-size: .84rem; }
+.notif-mark-read { transition: opacity .15s ease, transform .15s ease; }
+.notif-mark-read:focus-visible { opacity: 1; outline: 3px solid rgba(16,185,129,.28); outline-offset: 2px; }
+.dropdown-footer { padding: 12px 16px; border-top-color: #e6efe9; background: #fbfdfc; }
 
 .user-avatar {
   position: relative;
@@ -1496,13 +1510,13 @@ onMounted(() => {
   }
 
   .notification-dropdown {
-    width: min(100%, 320px);
+    width: min(380px, calc(100vw - 32px));
     right: 0;
     left: auto;
   }
 }
 
-@media (max-width: 640px) {
+@media (max-width: 767px) {
   .card-header {
     flex-direction: column;
     gap: 18px;
@@ -1526,9 +1540,23 @@ onMounted(() => {
   }
 
   .notification-dropdown {
-    width: min(100%, 260px);
-    right: 0;
-    left: auto;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    right: auto;
+    bottom: auto;
+    width: min(380px, calc(100vw - 32px));
+    max-height: calc(100dvh - 48px);
+    margin-top: 0;
+    border-radius: 18px;
+    transform: translate(-50%, -50%);
+    z-index: 1201;
   }
+
+  .dropdown-header { padding: 16px; }
+  .notification-list { max-height: min(360px, calc(100dvh - 190px)); }
+  .notification-item { padding: 14px 16px; }
+  .notif-message { font-size: .82rem; }
+  .notif-mark-read { opacity: 1; }
 }
 </style> 

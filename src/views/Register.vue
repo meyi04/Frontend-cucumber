@@ -1,15 +1,16 @@
 <template>
   <main class="register-page">
+    <LanguageSwitcher style="position: fixed; top: 16px; right: 16px; z-index: 20" />
     <section class="brand-panel">
-      <RouterLink to="/" class="brand"><span class="brand-mark"><img src="/logo.png" alt="Cu-Scan logo" /></span><span><strong>Cu-Scan</strong><small>Plant health intelligence</small></span></RouterLink>
+      <RouterLink to="/" class="brand"><span class="brand-mark"><img src="/logo.png" alt="Cu-Scan logo" /></span><span><strong>Cu-Scan</strong><small>{{ t('brandSubtitle') }}</small></span></RouterLink>
       <div class="brand-content">
-        <p class="eyebrow">Smarter crop care starts here</p>
-        <h1>See what your plants are trying to tell you.</h1>
-        <p class="brand-description">Create your workspace to identify plant diseases, track every scan, and make confident crop decisions.</p>
+        <p class="eyebrow">{{ t('registerEyebrow') }}</p>
+        <h1>{{ t('registerHeroTitle') }}</h1>
+        <p class="brand-description">{{ t('registerHeroDescription') }}</p>
         <div class="benefits">
-          <div><span>✓</span><p><strong>Fast, AI-powered scans</strong><small>Get clear insights from a single photo.</small></p></div>
-          <div><span>✓</span><p><strong>Organized scan history</strong><small>Keep your crop health records in one place.</small></p></div>
-          <div><span>✓</span><p><strong>Built for growers</strong><small>Useful guidance when it matters most.</small></p></div>
+          <div><span>✓</span><p><strong>{{ t('fastAiScans') }}</strong><small>{{ t('fastAiScansDescription') }}</small></p></div>
+          <div><span>✓</span><p><strong>{{ t('organizedScanHistory') }}</strong><small>{{ t('scanHistoryDescription') }}</small></p></div>
+          <div><span>✓</span><p><strong>{{ t('builtForGrowers') }}</strong><small>{{ t('growerGuidance') }}</small></p></div>
         </div>
       </div>
       <p class="brand-footer">© {{ new Date().getFullYear() }} Cu-Scan</p>
@@ -17,22 +18,22 @@
 
     <section class="form-panel">
       <div class="form-wrap">
-        <div class="form-heading"><p class="eyebrow">Create your account</p><h2>Start protecting your crops.</h2><p>It takes less than a minute to get set up.</p></div>
+        <div class="form-heading"><p class="eyebrow">{{ t('createAccount') }}</p><h2>{{ t('protectCrops') }}</h2><p>{{ t('setupTime') }}</p></div>
         <form class="register-form" @submit.prevent="handleRegister" novalidate>
-          <div class="field"><label for="name">Full name</label><input id="name" v-model="name" type="text" autocomplete="name" placeholder="Your full name" :class="{ error: errors.name }" @input="clearError('name')" /><small v-if="errors.name" class="field-error">{{ errors.name }}</small></div>
-          <div class="field"><label for="email">Email address</label><input id="email" v-model="email" type="email" autocomplete="email" placeholder="you@example.com" :class="{ error: errors.email }" @input="clearError('email')" /><small v-if="errors.email" class="field-error">{{ errors.email }}</small></div>
-          <div class="field"><label for="password">Password</label><div class="password-wrap"><input id="password" v-model="password" :type="showPassword ? 'text' : 'password'" autocomplete="new-password" placeholder="Create a password" :class="{ error: errors.password }" @input="clearError('password'); validatePassword()" /><button type="button" class="show-password" :aria-label="showPassword ? 'Hide password' : 'Show password'" @click="showPassword = !showPassword">{{ showPassword ? 'Hide' : 'Show' }}</button></div><small v-if="errors.password" class="field-error">{{ errors.password }}</small></div>
-          <div v-if="password" class="password-strength"><div><span>Password strength</span><strong :class="passwordStrength.class">{{ passwordStrength.label }}</strong></div><span class="strength-track"><i :class="passwordStrength.class" :style="{ width: passwordStrength.percent + '%' }"></i></span><small>Use 8+ characters with uppercase, lowercase, a number, and a symbol.</small></div>
-          <div class="field"><label for="confirmPassword">Confirm password</label><div class="password-wrap"><input id="confirmPassword" v-model="confirmPassword" :type="showConfirmPassword ? 'text' : 'password'" autocomplete="new-password" placeholder="Repeat your password" :class="{ error: errors.confirmPassword }" @input="clearError('confirmPassword'); validatePassword()" /><button type="button" class="show-password" :aria-label="showConfirmPassword ? 'Hide password' : 'Show password'" @click="showConfirmPassword = !showConfirmPassword">{{ showConfirmPassword ? 'Hide' : 'Show' }}</button></div><small v-if="errors.confirmPassword" class="field-error">{{ errors.confirmPassword }}</small></div>
-          <label class="terms"><input v-model="acceptTerms" type="checkbox" @change="clearError('acceptTerms')" /><span>I agree to the <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.</span></label><small v-if="errors.acceptTerms" class="field-error terms-error">{{ errors.acceptTerms }}</small>
+          <div class="field"><label for="name">{{ t('fullName') }}</label><input id="name" v-model="name" type="text" autocomplete="name" :placeholder="t('yourFullName')" :class="{ error: errors.name }" @input="clearError('name')" /><small v-if="errors.name" class="field-error">{{ errors.name }}</small></div>
+          <div class="field"><label for="email">{{ t('emailAddress') }}</label><input id="email" v-model="email" type="email" autocomplete="email" placeholder="you@example.com" :class="{ error: errors.email }" @input="clearError('email')" /><small v-if="errors.email" class="field-error">{{ errors.email }}</small></div>
+          <div class="field"><label for="password">{{ t('password') }}</label><div class="password-wrap"><input id="password" v-model="password" :type="showPassword ? 'text' : 'password'" autocomplete="new-password" :placeholder="t('createPassword')" :class="{ error: errors.password }" @input="clearError('password'); validatePassword()" /><button type="button" class="show-password" :aria-label="t(showPassword ? 'hidePassword' : 'showPassword')" @click="showPassword = !showPassword">{{ t(showPassword ? 'hidePassword' : 'showPassword') }}</button></div><small v-if="errors.password" class="field-error">{{ errors.password }}</small></div>
+          <div v-if="password" class="password-strength"><div><span>{{ t('passwordStrength') }}</span><strong :class="passwordStrength.class">{{ passwordStrength.label }}</strong></div><span class="strength-track"><i :class="passwordStrength.class" :style="{ width: passwordStrength.percent + '%' }"></i></span><small>{{ t('useStrongPassword') }}</small></div>
+          <div class="field"><label for="confirmPassword">{{ t('confirmPassword') }}</label><div class="password-wrap"><input id="confirmPassword" v-model="confirmPassword" :type="showConfirmPassword ? 'text' : 'password'" autocomplete="new-password" :placeholder="t('repeatPassword')" :class="{ error: errors.confirmPassword }" @input="clearError('confirmPassword'); validatePassword()" /><button type="button" class="show-password" :aria-label="t(showConfirmPassword ? 'hidePassword' : 'showPassword')" @click="showConfirmPassword = !showConfirmPassword">{{ t(showConfirmPassword ? 'hidePassword' : 'showPassword') }}</button></div><small v-if="errors.confirmPassword" class="field-error">{{ errors.confirmPassword }}</small></div>
+          <label class="terms"><input v-model="acceptTerms" type="checkbox" @change="clearError('acceptTerms')" /><span>{{ t('agreeToTerms') }} <a href="#">{{ t('terms') }}</a> {{ t('and') }} <a href="#">{{ t('privacy') }}</a>.</span></label><small v-if="errors.acceptTerms" class="field-error terms-error">{{ errors.acceptTerms }}</small>
           <p v-if="authStore.error" class="auth-error">{{ authStore.error }}</p>
-          <button class="submit-btn" type="submit" :disabled="isSubmitting"><span v-if="!isSubmitting">Create account <b>→</b></span><span v-else class="loading"><i></i> Creating account</span></button>
+          <button class="submit-btn" type="submit" :disabled="isSubmitting"><span v-if="!isSubmitting">{{ t('createAccountButton') }} <b>→</b></span><span v-else class="loading"><i></i> {{ t('creatingAccount') }}</span></button>
         </form>
-        <p class="signin">Already have an account? <RouterLink to="/login">Sign in</RouterLink></p>
+        <p class="signin">{{ t('alreadyHaveAccount') }} <RouterLink to="/login">{{ t('signIn') }}</RouterLink></p>
       </div>
     </section>
 
-    <div v-if="showSuccessModal" class="modal-overlay" @click.self="showSuccessModal = false"><section class="success-modal"><div class="success-mark">✓</div><h3>Check your email</h3><p>We sent a verification link to <strong>{{ email }}</strong>. Verify your email to activate your account.</p><div><button class="modal-primary" @click="goToLogin">Go to sign in</button><button class="modal-secondary" @click="resendVerification">Resend email</button></div></section></div>
+    <div v-if="showSuccessModal" class="modal-overlay" @click.self="showSuccessModal = false"><section class="success-modal"><div class="success-mark">✓</div><h3>{{ t('checkYourEmail') }}</h3><p>{{ t('verificationSent') }} <strong>{{ email }}</strong>. {{ t('activateAccount') }}</p><div><button class="modal-primary" @click="goToLogin">{{ t('goToSignIn') }}</button><button class="modal-secondary" @click="resendVerification">{{ t('resendEmail') }}</button></div></section></div>
   </main>
 </template>
 
@@ -40,14 +41,17 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../store/auth'
+import { useLanguage } from '../store/language'
+import LanguageSwitcher from '../components/LanguageSwitcher.vue'
 const router = useRouter(); const authStore = useAuthStore()
+const { t } = useLanguage()
 const name = ref(''); const email = ref(''); const password = ref(''); const confirmPassword = ref(''); const acceptTerms = ref(false); const showPassword = ref(false); const showConfirmPassword = ref(false); const isSubmitting = ref(false); const showSuccessModal = ref(false)
 const errors = reactive({ name: '', email: '', password: '', confirmPassword: '', acceptTerms: '' })
 const passwordRequirements = reactive([{ met: false }, { met: false }, { met: false }, { met: false }, { met: false }])
 onMounted(() => { authStore.initializeAuth(); authStore.clearError() })
-const passwordStrength = computed(() => { if (!password.value) return { label: 'None', percent: 0, class: 'none' }; const checks = [password.value.length >= 8, /[A-Z]/.test(password.value), /[a-z]/.test(password.value), /\d/.test(password.value), /[!@#$%^&*(),.?":{}|<>]/.test(password.value)]; checks.forEach((met, i) => passwordRequirements[i].met = met); const score = checks.filter(Boolean).length; return score <= 2 ? { label: 'Weak', percent: 40, class: 'weak' } : score <= 4 ? { label: 'Good', percent: 70, class: 'good' } : { label: 'Strong', percent: 100, class: 'strong' } })
-const validatePassword = () => { errors.password = password.value && password.value.length < 6 ? 'Password must be at least 6 characters' : ''; errors.confirmPassword = confirmPassword.value && password.value !== confirmPassword.value ? 'Passwords do not match' : '' }
-const validateForm = () => { Object.keys(errors).forEach(key => errors[key] = ''); let valid = true; if (!name.value.trim()) { errors.name = 'Name is required'; valid = false }; if (!email.value) { errors.email = 'Email is required'; valid = false } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value)) { errors.email = 'Please enter a valid email address'; valid = false }; if (!password.value) { errors.password = 'Password is required'; valid = false } else if (password.value.length < 6) { errors.password = 'Password must be at least 6 characters'; valid = false }; if (!confirmPassword.value) { errors.confirmPassword = 'Please confirm your password'; valid = false } else if (password.value !== confirmPassword.value) { errors.confirmPassword = 'Passwords do not match'; valid = false }; if (!acceptTerms.value) { errors.acceptTerms = 'You must accept the terms and conditions'; valid = false }; return valid }
+const passwordStrength = computed(() => { if (!password.value) return { label: t('none'), percent: 0, class: 'none' }; const checks = [password.value.length >= 8, /[A-Z]/.test(password.value), /[a-z]/.test(password.value), /\d/.test(password.value), /[!@#$%^&*(),.?":{}|<>]/.test(password.value)]; checks.forEach((met, i) => passwordRequirements[i].met = met); const score = checks.filter(Boolean).length; return score <= 2 ? { label: t('weak'), percent: 40, class: 'weak' } : score <= 4 ? { label: t('good'), percent: 70, class: 'good' } : { label: t('strong'), percent: 100, class: 'strong' } })
+const validatePassword = () => { errors.password = password.value && password.value.length < 6 ? t('passwordMinimum') : ''; errors.confirmPassword = confirmPassword.value && password.value !== confirmPassword.value ? t('passwordsDoNotMatch') : '' }
+const validateForm = () => { Object.keys(errors).forEach(key => errors[key] = ''); let valid = true; if (!name.value.trim()) { errors.name = t('nameRequired'); valid = false }; if (!email.value) { errors.email = t('emailRequired'); valid = false } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value)) { errors.email = t('validEmailRequired'); valid = false }; if (!password.value) { errors.password = t('passwordRequired'); valid = false } else if (password.value.length < 6) { errors.password = t('passwordMinimum'); valid = false }; if (!confirmPassword.value) { errors.confirmPassword = t('confirmPasswordRequired'); valid = false } else if (password.value !== confirmPassword.value) { errors.confirmPassword = t('passwordsDoNotMatch'); valid = false }; if (!acceptTerms.value) { errors.acceptTerms = t('acceptTermsRequired'); valid = false }; return valid }
 const clearError = field => { errors[field] = ''; if (field !== 'password') authStore.clearError() }
 const handleRegister = async () => { if (!validateForm()) return; isSubmitting.value = true; const result = await authStore.register(email.value, password.value, { displayName: name.value, createdAt: new Date().toISOString() }); if (result.success) showSuccessModal.value = true; isSubmitting.value = false }
 const goToLogin = () => { showSuccessModal.value = false; router.push('/login') }

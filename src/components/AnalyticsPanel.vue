@@ -4,12 +4,12 @@
     <div class="dashboard-header">
       <div class="header-content">
         <div class="header-left">
-          <h2>Process Analytics</h2>
-          <p class="subtitle">Performance insights and process monitoring</p>
+          <h2>{{ t('analyticsTitle') }}</h2>
+          <p class="subtitle">{{ t('analyticsSubtitle') }}</p>
         </div>
         <div class="header-right">
           <div class="time-filter">
-            <label>Time Range</label>
+            <label>{{ t('timeRange') }}</label>
             <div class="filter-buttons">
               <button 
                 v-for="period in timePeriods" 
@@ -36,13 +36,13 @@
           </svg>
         </div>
         <div class="stat-content">
-          <div class="stat-label">Total Processes</div>
+          <div class="stat-label">{{ t('totalProcesses') }}</div>
           <div class="stat-value">{{ total }}</div>
           <div class="stat-trend" v-if="trendPercentage !== null">
             <span :class="trendPercentage >= 0 ? 'positive' : 'negative'">
               {{ trendPercentage >= 0 ? '↑' : '↓' }} {{ Math.abs(trendPercentage) }}%
             </span>
-            <span class="trend-label">from last period</span>
+            <span class="trend-label">{{ t('fromLastPeriod') }}</span>
           </div>
         </div>
       </div>
@@ -55,9 +55,9 @@
           </svg>
         </div>
         <div class="stat-content">
-          <div class="stat-label">Completed</div>
+          <div class="stat-label">{{ t('completed') }}</div>
           <div class="stat-value">{{ completedCount }}</div>
-          <div class="stat-subtext">{{ completionRate }}% success rate</div>
+          <div class="stat-subtext">{{ completionRate }}% {{ t('successRate') }}</div>
         </div>
       </div>
 
@@ -69,9 +69,9 @@
           </svg>
         </div>
         <div class="stat-content">
-          <div class="stat-label">Avg Processing Time</div>
+          <div class="stat-label">{{ t('avgProcessingTime') }}</div>
           <div class="stat-value">{{ avgProcessing !== null ? avgProcessing + 's' : 'N/A' }}</div>
-          <div class="stat-subtext">{{ fastProcessCount }} processes under 5s</div>
+          <div class="stat-subtext">{{ t('processesUnder5s', { count: fastProcessCount }) }}</div>
         </div>
       </div>
 
@@ -83,9 +83,9 @@
           </svg>
         </div>
         <div class="stat-content">
-          <div class="stat-label">Active Processes</div>
+          <div class="stat-label">{{ t('activeProcesses') }}</div>
           <div class="stat-value">{{ activeCount }}</div>
-          <div class="stat-subtext">Currently in progress</div>
+          <div class="stat-subtext">{{ t('currentlyInProgress') }}</div>
         </div>
       </div>
     </div>
@@ -95,11 +95,11 @@
       <!-- Volume Chart -->
       <div class="chart-container">
         <div class="chart-header">
-          <h3>Process Volume</h3>
+          <h3>{{ t('processVolume') }}</h3>
           <div class="chart-legend">
             <div class="legend-item">
               <span class="legend-color current"></span>
-              <span>Current Period</span>
+              <span>{{ t('currentPeriod') }}</span>
             </div>
           </div>
         </div>
@@ -127,7 +127,7 @@
       <!-- Status Distribution -->
       <div class="chart-container">
         <div class="chart-header">
-          <h3>Status Distribution</h3>
+          <h3>{{ t('statusDistribution') }}</h3>
         </div>
         <div class="chart-body">
           <div class="distribution-chart">
@@ -135,13 +135,13 @@
               <div class="donut-chart" :style="donutStyle"></div>
               <div class="donut-center">
                 <div class="center-value">{{ Object.keys(statusCounts).length }}</div>
-                <div class="center-label">Statuses</div>
+                <div class="center-label">{{ t('statuses') }}</div>
               </div>
             </div>
             <div class="status-legend">
               <div v-for="(count, status) in statusCounts" :key="status" class="legend-item">
                 <span class="legend-dot" :style="{ backgroundColor: getStatusColor(status) }"></span>
-                <span class="legend-text">{{ status }}</span>
+                <span class="legend-text">{{ translateStatus(status) }}</span>
                 <span class="legend-value">{{ count }}</span>
                 <span class="legend-percentage">{{ getStatusPercentage(count) }}%</span>
               </div>
@@ -154,13 +154,13 @@
     <!-- Performance Metrics -->
     <div class="metrics-section">
       <div class="metrics-header">
-        <h3>Performance Metrics</h3>
+        <h3>{{ t('performanceMetrics') }}</h3>
         <div class="metrics-filter">
-          <span class="filter-label">Sort by:</span>
+          <span class="filter-label">{{ t('sortBy') }}:</span>
           <select v-model="sortMetric" class="metric-select">
-            <option value="time">Processing Time</option>
-            <option value="date">Recent Activity</option>
-            <option value="status">Status</option>
+            <option value="time">{{ t('processingTime') }}</option>
+            <option value="date">{{ t('recentActivity') }}</option>
+            <option value="status">{{ t('status') }}</option>
           </select>
         </div>
       </div>
@@ -178,7 +178,7 @@
             <span v-if="metric.trend !== null">
               {{ metric.trend >= 0 ? '↗' : '↘' }} {{ Math.abs(metric.trend) }}%
             </span>
-            <span v-else>No previous data</span>
+            <span v-else>{{ t('noPreviousData') }}</span>
           </div>
           <div class="metric-description">{{ metric.description }}</div>
         </div>
@@ -188,9 +188,9 @@
     <!-- Recent Activity -->
     <div class="activity-section">
       <div class="activity-header">
-        <h3>Recent Activity</h3>
+        <h3>{{ t('recentActivity') }}</h3>
         <button class="view-all-btn" @click="openModal('activity')">
-          View All
+          {{ t('viewAll') }}
           <svg viewBox="0 0 20 20" fill="none">
             <path d="M4.16675 10H15.8334M15.8334 10L10.0001 4.16669M15.8334 10L10.0001 15.8334" 
                   stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -208,11 +208,11 @@
             <div class="activity-meta">
               <span class="activity-time">{{ formatTime(activity.time) }}</span>
               <span class="activity-dot">•</span>
-              <span class="activity-duration" v-if="activity.duration">{{ activity.duration }} processing</span>
+              <span class="activity-duration" v-if="activity.duration">{{ t('processingDuration', { duration: activity.duration }) }}</span>
             </div>
           </div>
           <div class="activity-status" :class="activity.status">
-            {{ activity.status }}
+            {{ translateStatus(activity.status) }}
           </div>
         </div>
         
@@ -223,8 +223,8 @@
               <path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" stroke-width="1.5"/>
             </svg>
           </div>
-          <div class="empty-text">No recent activity</div>
-          <div class="empty-subtext">Start a new process to see analytics</div>
+          <div class="empty-text">{{ t('recentActivityEmpty') }}</div>
+          <div class="empty-subtext">{{ t('startProcessAnalytics') }}</div>
         </div>
       </div>
     </div>
@@ -233,7 +233,7 @@
     <div v-if="showModal" class="modal-overlay" @click.self="closeModal">
       <div class="modal-card">
         <div class="modal-header">
-          <h3>All Activity</h3>
+          <h3>{{ t('allActivity') }}</h3>
           <button class="modal-close" @click="closeModal">
             <svg viewBox="0 0 24 24" fill="none">
               <path d="M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
@@ -249,8 +249,8 @@
                 <path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" stroke-width="1.5"/>
               </svg>
             </div>
-            <div class="empty-text">No activity yet</div>
-            <div class="empty-subtext">Start a new process to see analytics</div>
+            <div class="empty-text">{{ t('noActivityYet') }}</div>
+            <div class="empty-subtext">{{ t('startProcessAnalytics') }}</div>
           </div>
           <div v-else class="activity-list">
             <div v-for="(activity, index) in recent" :key="index" class="activity-item">
@@ -263,12 +263,12 @@
                   <span class="activity-time">{{ formatTime(activity.created_at) }}</span>
                   <span class="activity-dot">â€¢</span>
                   <span class="activity-duration" v-if="activity.processing_time">
-                    {{ activity.processing_time }} processing
+                    {{ t('processingDuration', { duration: `${activity.processing_time}s` }) }}
                   </span>
                 </div>
               </div>
               <div class="activity-status" :class="activity.status">
-                {{ activity.status || 'completed' }}
+                {{ translateStatus(activity.status || 'completed') }}
               </div>
             </div>
           </div>
@@ -283,6 +283,9 @@ import { ref, onMounted, computed, watch, onUnmounted } from 'vue'
 import { db, auth, collection, query, orderBy, getDocs } from '../firebase.js'
 import { where } from 'firebase/firestore'
 import { onAuthStateChanged } from 'firebase/auth'
+import { useLanguage } from '../store/language'
+
+const { t } = useLanguage()
 
 const loading = ref(true)
 const signedIn = ref(false)
@@ -304,17 +307,33 @@ const timePeriods = [
   { label: '90D', value: 90 }
 ]
 
+const translateStatus = (status) => {
+  const keys = {
+    completed: 'completed',
+    done: 'completed',
+    processing: 'processing',
+    in_progress: 'currentlyInProgress',
+    pending: 'pendingStatus',
+    error: 'errorStatus',
+    failed: 'failedStatus',
+    healthy: 'healthy',
+    infected: 'infected'
+  }
+  const key = keys[String(status).toLowerCase()]
+  return key ? t(key) : status
+}
+
 const shortDate = (iso) => {
   try { 
     const date = new Date(iso)
-    return date.toLocaleDateString(undefined, { day: 'numeric', month: 'short' })
+    return date.toLocaleDateString(t('locale'), { day: 'numeric', month: 'short' })
   } catch { return iso }
 }
 
 const getDayName = (iso) => {
   try {
     const date = new Date(iso)
-    return date.toLocaleDateString(undefined, { weekday: 'short' })
+    return date.toLocaleDateString(t('locale'), { weekday: 'short' })
   } catch { return '' }
 }
 
@@ -330,7 +349,7 @@ const barHeight = (count) => {
 
 const formatTime = (timestamp) => {
   try {
-    if (!timestamp) return 'Just now'
+    if (!timestamp) return t('justNow')
     const date = timestamp?.toDate ? timestamp.toDate() : new Date(timestamp)
     const now = new Date()
     const diffMs = now - date
@@ -338,11 +357,11 @@ const formatTime = (timestamp) => {
     const diffHours = Math.floor(diffMs / 3600000)
     const diffDays = Math.floor(diffMs / 86400000)
     
-    if (diffMins < 60) return `${diffMins}m ago`
-    if (diffHours < 24) return `${diffHours}h ago`
-    if (diffDays < 7) return `${diffDays}d ago`
-    return date.toLocaleDateString()
-  } catch { return timestamp || 'Just now' }
+    if (diffMins < 60) return t('minutesAgo', { count: diffMins })
+    if (diffHours < 24) return t('hoursAgo', { count: diffHours })
+    if (diffDays < 7) return t('daysAgo', { count: diffDays })
+    return date.toLocaleDateString(t('locale'))
+  } catch { return timestamp || t('justNow') }
 }
 
 const normalizeTimestamp = (value) => {
@@ -474,10 +493,10 @@ const getStatusPercentage = (count) => {
 
 const performanceMetrics = computed(() => [
   {
-    title: 'Peak Volume',
-    value: `${Math.max(...perDay.value.map(d => d.count), 0)} processes`,
+    title: t('peakVolume'),
+    value: t('processCountValue', { count: Math.max(...perDay.value.map(d => d.count), 0) }),
     trend: 15,
-    description: 'Highest single-day process count',
+    description: t('highestDailyCount'),
     color: '#10b981',
     icon: {
       template: `
@@ -488,10 +507,10 @@ const performanceMetrics = computed(() => [
     }
   },
   {
-    title: 'Avg Success Rate',
+    title: t('averageSuccessRate'),
     value: `${completionRate.value}%`,
     trend: 5,
-    description: 'Process completion percentage',
+    description: t('processCompletionPercentage'),
     color: '#3b82f6',
     icon: {
       template: `
@@ -503,10 +522,10 @@ const performanceMetrics = computed(() => [
     }
   },
   {
-    title: 'Response Time',
-    value: avgProcessing.value ? `${avgProcessing.value}s` : 'N/A',
+    title: t('responseTime'),
+    value: avgProcessing.value ? `${avgProcessing.value}s` : t('notAvailable'),
     trend: -8,
-    description: 'Average processing duration',
+    description: t('averageProcessingDuration'),
     color: '#f59e0b',
     icon: {
       template: `
@@ -518,10 +537,10 @@ const performanceMetrics = computed(() => [
     }
   },
   {
-    title: 'Active Sessions',
+    title: t('activeSessions'),
     value: activeCount.value,
     trend: 12,
-    description: 'Currently running processes',
+    description: t('currentlyRunningProcesses'),
     color: '#8b5cf6',
     icon: {
       template: `
@@ -536,7 +555,7 @@ const performanceMetrics = computed(() => [
 
 const recentActivity = computed(() => {
   return recent.value.slice(0, 5).map((proc) => ({
-    title: proc.title || proc.name || 'Image Analysis Process',
+    title: proc.title || proc.name || t('imageAnalysisProcess'),
     time: proc.created_at,
     duration: proc.processing_time ? `${proc.processing_time}s` : null,
     status: proc.status || 'completed'

@@ -1,23 +1,74 @@
 <template>
-  <button class="chat-launcher" :class="{ open: isOpen, unread: hasUnreadMessages }" :aria-label="isOpen ? 'Close Cu-Scan assistant' : 'Open Cu-Scan assistant'" @click="toggleChat"><svg v-if="!isOpen" viewBox="0 0 24 24" fill="none"><path d="M20 11.5a7.5 7.5 0 0 1-7.5 7.5H7l-3.5 2v-5.8A7.5 7.5 0 1 1 20 11.5Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M8 11.5h.01M12 11.5h.01M16 11.5h.01" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg><svg v-else viewBox="0 0 24 24" fill="none"><path d="m7 7 10 10M17 7 7 17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><i v-if="hasUnreadMessages"></i></button>
-  <Transition name="chat"><section v-if="isOpen" class="chat-window" aria-label="Cu-Scan plant assistant"><header class="chat-header"><div class="assistant-avatar"><img src="/logo.png" alt="" /></div><div class="assistant-info"><strong>Cu-Scan Assistant</strong><span><i></i> Plant health support</span></div><div class="header-actions"><button title="Clear conversation" aria-label="Clear conversation" @click="clearChat"><svg viewBox="0 0 24 24" fill="none"><path d="M4 7h16m-9 4v5m4-5v5M9 7l1-2h4l1 2m-8 0 1 13h8l1-13" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></button><button title="Close chat" aria-label="Close chat" @click="toggleChat"><svg viewBox="0 0 24 24" fill="none"><path d="m7 7 10 10M17 7 7 17" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button></div></header>
-    <div ref="messagesContainer" class="chat-messages"><div v-if="!messages.length" class="welcome"><div class="welcome-icon">✦</div><h3>How can I help with your plants?</h3><p>Ask about symptoms, disease prevention, or treatment options.</p><div class="suggestions"><button v-for="question in exampleQuestions.slice(0, 3)" :key="question" @click="askExample(question)">{{ question }} <b>→</b></button></div></div><article v-for="message in messages" :key="message.id" class="message" :class="message.sender"><div v-if="message.sender === 'bot'" class="message-avatar"><img src="/logo.png" alt="" /></div><div class="message-body"><div class="bubble"><template v-if="message.loading"><div class="typing"><i></i><i></i><i></i></div><span>Analyzing your question…</span></template><p v-else-if="message.sender === 'user'">{{ message.text }}</p><div v-else class="bot-response" v-html="formatResponse(message.text)"></div></div><time>{{ formatTime(message.timestamp) }}</time></div></article></div>
-    <div v-if="error" class="error-banner"><span>{{ error }}</span><button @click="error = ''">Dismiss</button></div>
-    <div class="composer"><div class="quick-row"><button v-for="question in exampleQuestions.slice(3, 6)" :key="question" @click="askExample(question)">{{ question }}</button></div><div class="input-shell"><textarea ref="textInput" v-model="userInput" rows="1" :disabled="isLoading" placeholder="Ask about a plant problem…" @input="resizeTextarea" @keydown.enter.exact.prevent="sendMessage" @keydown.enter.shift.exact.prevent="userInput += '\n'"></textarea><button class="send" :disabled="!userInput.trim() || isLoading" aria-label="Send message" @click="sendMessage"><svg viewBox="0 0 24 24" fill="none"><path d="m21 3-8.8 18-2.4-8.8L1 9.8 21 3Z" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div><p>Enter to send · Shift + Enter for a new line</p></div>
+  <button class="chat-launcher" :class="{ open: isOpen, unread: hasUnreadMessages }" :aria-label="t(isOpen ? 'closeAssistant' : 'openAssistant')" @click="toggleChat"><svg v-if="!isOpen" viewBox="0 0 24 24" fill="none"><path d="M20 11.5a7.5 7.5 0 0 1-7.5 7.5H7l-3.5 2v-5.8A7.5 7.5 0 1 1 20 11.5Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M8 11.5h.01M12 11.5h.01M16 11.5h.01" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg><svg v-else viewBox="0 0 24 24" fill="none"><path d="m7 7 10 10M17 7 7 17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><i v-if="hasUnreadMessages"></i></button>
+  <Transition name="chat"><section v-if="isOpen" class="chat-window" :aria-label="t('assistantAriaLabel')"><header class="chat-header"><div class="assistant-avatar"><img src="/logo.png" alt="" /></div><div class="assistant-info"><strong>{{ t('assistant') }}</strong><span><i></i> {{ t('plantSupport') }}</span></div><div class="header-actions"><button :title="t('clearConversation')" :aria-label="t('clearConversation')" @click="clearChat"><svg viewBox="0 0 24 24" fill="none"><path d="M4 7h16m-9 4v5m4-5v5M9 7l1-2h4l1 2m-8 0 1 13h8l1-13" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></button><button :title="t('close')" :aria-label="t('close')" @click="toggleChat"><svg viewBox="0 0 24 24" fill="none"><path d="m7 7 10 10M17 7 7 17" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button></div></header>
+    <div ref="messagesContainer" class="chat-messages"><div v-if="!messages.length" class="welcome"><div class="welcome-icon">✦</div><h3>{{ t('howCanIHelp') }}</h3><p>{{ t('askSymptoms') }}</p><div class="suggestions"><button v-for="question in exampleQuestions.slice(0, 3)" :key="question" @click="askExample(question)">{{ question }} <b>→</b></button></div></div><article v-for="message in messages" :key="message.id" class="message" :class="message.sender"><div v-if="message.sender === 'bot'" class="message-avatar"><img src="/logo.png" alt="" /></div><div class="message-body"><div class="bubble"><template v-if="message.loading"><div class="typing"><i></i><i></i><i></i></div><span>{{ t('analyzingQuestion') }}</span></template><p v-else-if="message.sender === 'user'">{{ message.text }}</p><div v-else class="bot-response" v-html="formatResponse(message.text)"></div></div><time>{{ formatTime(message.timestamp) }}</time></div></article></div>
+    <div v-if="error" class="error-banner"><span>{{ error }}</span><button @click="error = ''">{{ t('dismiss') }}</button></div>
+    <div class="composer"><div class="quick-row"><button v-for="question in exampleQuestions.slice(3, 6)" :key="question" @click="askExample(question)">{{ question }}</button></div><div class="input-shell"><textarea ref="textInput" v-model="userInput" rows="1" :disabled="isLoading" :placeholder="t('askPlantProblem')" @input="resizeTextarea" @keydown.enter.exact.prevent="sendMessage" @keydown.enter.shift.exact.prevent="userInput += '\n'"></textarea><button class="send" :disabled="!userInput.trim() || isLoading" :aria-label="t('sendMessage')" @click="sendMessage"><svg viewBox="0 0 24 24" fill="none"><path d="m21 3-8.8 18-2.4-8.8L1 9.8 21 3Z" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div><p>{{ t('chatKeyboardHint') }}</p></div>
   </section></Transition>
 </template>
 
 <script setup>
-import { nextTick, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { marked } from 'marked'
+import { useLanguage } from '../store/language'
 marked.setOptions({ breaks: true, gfm: true })
+const { t, currentLanguage } = useLanguage()
 const isOpen = ref(false); const userInput = ref(''); const messages = ref([]); const isLoading = ref(false); const error = ref(''); const hasUnreadMessages = ref(false); const messagesContainer = ref(null); const textInput = ref(null)
-const exampleQuestions = ['How do I treat powdery mildew?', 'Why are my leaves yellow with brown spots?', 'What causes sudden wilting?', 'How can I prevent fungal diseases?', 'What is an organic treatment for aphids?', 'How often should I water to avoid root rot?']
+const exampleQuestions = computed(() => ['chatQuestion1', 'chatQuestion2', 'chatQuestion3', 'chatQuestion4', 'chatQuestion5', 'chatQuestion6'].map(key => t(key)))
 const toggleChat = () => { isOpen.value = !isOpen.value; if (isOpen.value) { hasUnreadMessages.value = false; nextTick(() => { scrollToBottom(); textInput.value?.focus() }) } }
 const askExample = question => { userInput.value = question; sendMessage() }
-const sendMessage = async () => { const text = userInput.value.trim(); if (!text || isLoading.value) return; messages.value.push({ id: Date.now(), sender: 'user', text, timestamp: new Date() }); userInput.value = ''; resizeTextarea(); const loadingId = Date.now() + 1; messages.value.push({ id: loadingId, sender: 'bot', loading: true, timestamp: new Date() }); isLoading.value = true; error.value = ''; scrollToBottom(); try { const history = messages.value.filter(message => !message.loading).map(message => ({ sender: message.sender, text: message.text, timestamp: message.timestamp })); const response = await fetch('http://143.198.90.26/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message: text, history }) }); const data = await response.json(); if (!response.ok || !data.success) throw new Error(data.error || 'Failed to get a response'); messages.value = messages.value.filter(message => message.id !== loadingId); messages.value.push({ id: Date.now() + 2, sender: 'bot', text: data.response, timestamp: new Date() }); saveConversation() } catch (err) { messages.value = messages.value.filter(message => message.id !== loadingId); error.value = 'The assistant is temporarily unavailable. Showing general guidance instead.'; messages.value.push({ id: Date.now() + 3, sender: 'bot', text: getFallbackResponse(text), timestamp: new Date() }) } finally { isLoading.value = false; scrollToBottom() } }
-const getFallbackResponse = query => { const lower = query.toLowerCase(); if (lower.includes('mildew') || lower.includes('powdery')) return '**Powdery mildew:** Remove heavily affected leaves, improve airflow, and avoid overhead watering. A baking-soda spray may help with mild cases. For severe infections, use a labelled fungicide and follow its instructions.'; if (lower.includes('yellow') || lower.includes('spot')) return '**Yellow leaves and brown spots** can indicate fungal disease, watering stress, pests, or a nutrient issue. Remove affected leaves, check drainage, and inspect both sides of the leaves for pests.'; return 'Start by isolating the affected plant, taking clear photos of the symptoms, and checking soil moisture and drainage. Look for pests beneath leaves and remove severely damaged foliage. A local agricultural expert can help if symptoms spread quickly.' }
-const formatResponse = text => marked.parse(text || ''); const clearChat = () => { if (confirm('Clear this conversation?')) { messages.value = []; localStorage.removeItem('plant_chat_history') } }; const saveConversation = () => { try { localStorage.setItem('plant_chat_history', JSON.stringify(messages.value.filter(message => !message.loading))) } catch {} }; const loadConversation = () => { try { const stored = localStorage.getItem('plant_chat_history'); if (stored) messages.value = JSON.parse(stored).map(message => ({ ...message, timestamp: new Date(message.timestamp) })) } catch {} }; const resizeTextarea = () => nextTick(() => { if (textInput.value) { textInput.value.style.height = 'auto'; textInput.value.style.height = Math.min(textInput.value.scrollHeight, 104) + 'px' } }); const scrollToBottom = () => nextTick(() => { if (messagesContainer.value) messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight }); const formatTime = date => new Date(date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+const sendMessage = async () => {
+  const text = userInput.value.trim()
+  if (!text || isLoading.value) return
+
+  messages.value.push({ id: Date.now(), sender: 'user', text, timestamp: new Date() })
+  userInput.value = ''
+  resizeTextarea()
+  const loadingId = Date.now() + 1
+  messages.value.push({ id: loadingId, sender: 'bot', loading: true, timestamp: new Date() })
+  isLoading.value = true
+  error.value = ''
+  scrollToBottom()
+
+  try {
+    const history = messages.value
+      .filter(message => !message.loading)
+      .map(message => ({ sender: message.sender, text: message.text, timestamp: message.timestamp }))
+    const response = await fetch('http://143.198.90.26/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: text, history, language: currentLanguage.value })
+    })
+    const data = await response.json()
+    if (!response.ok || !data.success) throw new Error(data.error || 'Failed to get a response')
+    messages.value = messages.value.filter(message => message.id !== loadingId)
+    messages.value.push({ id: Date.now() + 2, sender: 'bot', text: data.response, timestamp: new Date() })
+    saveConversation()
+  } catch (err) {
+    messages.value = messages.value.filter(message => message.id !== loadingId)
+    error.value = t('assistantUnavailable')
+    messages.value.push({ id: Date.now() + 3, sender: 'bot', text: getFallbackResponse(text), timestamp: new Date() })
+  } finally {
+    isLoading.value = false
+    scrollToBottom()
+  }
+}
+const getFallbackResponse = query => {
+  if (currentLanguage.value === 'tl') {
+    return 'Ihiwalay muna ang apektadong halaman, kunan ng malinaw na larawan ang mga sintomas, at suriin ang halumigmig at drainage ng lupa. Tingnan kung may peste sa ilalim ng mga dahon at alisin ang mga bahaging malubhang napinsala. Kumonsulta sa lokal na eksperto sa agrikultura kung mabilis na kumalat ang mga sintomas.'
+  }
+  const lower = query.toLowerCase()
+  if (lower.includes('mildew') || lower.includes('powdery')) return '**Powdery mildew:** Remove heavily affected leaves, improve airflow, and avoid overhead watering. A baking-soda spray may help with mild cases. For severe infections, use a labelled fungicide and follow its instructions.'
+  if (lower.includes('yellow') || lower.includes('spot')) return '**Yellow leaves and brown spots** can indicate fungal disease, watering stress, pests, or a nutrient issue. Remove affected leaves, check drainage, and inspect both sides of the leaves for pests.'
+  return 'Start by isolating the affected plant, taking clear photos of the symptoms, and checking soil moisture and drainage. Look for pests beneath leaves and remove severely damaged foliage. A local agricultural expert can help if symptoms spread quickly.'
+}
+const formatResponse = text => marked.parse(text || '')
+const clearChat = () => { if (confirm(t('confirmClearChat'))) { messages.value = []; localStorage.removeItem('plant_chat_history') } }
+const saveConversation = () => { try { localStorage.setItem('plant_chat_history', JSON.stringify(messages.value.filter(message => !message.loading))) } catch {} }
+const loadConversation = () => { try { const stored = localStorage.getItem('plant_chat_history'); if (stored) messages.value = JSON.parse(stored).map(message => ({ ...message, timestamp: new Date(message.timestamp) })) } catch {} }
+const resizeTextarea = () => nextTick(() => { if (textInput.value) { textInput.value.style.height = 'auto'; textInput.value.style.height = Math.min(textInput.value.scrollHeight, 104) + 'px' } })
+const scrollToBottom = () => nextTick(() => { if (messagesContainer.value) messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight })
+const formatTime = date => new Date(date).toLocaleTimeString(t('locale'), { hour: '2-digit', minute: '2-digit' })
 onMounted(loadConversation); watch(messages, () => { scrollToBottom(); if (!isOpen.value && messages.value.length) hasUnreadMessages.value = true }, { deep: true })
 </script>
 

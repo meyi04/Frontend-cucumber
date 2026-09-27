@@ -1,41 +1,41 @@
 <template>
   <aside class="sidebar-wrapper" :class="{ collapsed: isCollapsed, open: isOpen }">
-    <nav class="sidebar" aria-label="Primary navigation" @click="handleNavClick">
+    <nav class="sidebar" :aria-label="t('primaryNavigation')" @click="handleNavClick">
       <div class="brand-row">
-        <RouterLink to="/dashboard" class="brand" aria-label="Cu-Scan dashboard">
+        <RouterLink to="/dashboard" class="brand" :aria-label="t('dashboardHome')">
           <span class="brand-mark"><img src="/logo.png" alt="Cu-Scan logo" /></span>
           <span v-show="!isCollapsed" class="brand-copy">
             <strong>Cu-Scan</strong>
-            <small>Plant health intelligence</small>
+            <small>{{ t('brandSubtitle') }}</small>
           </span>
         </RouterLink>
-        <button class="sidebar-toggle" type="button" :aria-label="isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'" @click.stop="toggleSidebar">
+        <button class="sidebar-toggle" type="button" :aria-label="t(isCollapsed ? 'expandSidebar' : 'collapseSidebar')" @click.stop="toggleSidebar">
           <svg viewBox="0 0 24 24" fill="none"><path :d="isCollapsed ? 'M9 18l6-6-6-6' : 'M15 18l-6-6 6-6'" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" /></svg>
         </button>
       </div>
 
-      <p v-show="!isCollapsed" class="nav-label">Workspace</p>
+      <p v-show="!isCollapsed" class="nav-label">{{ t('workspace') }}</p>
       <div class="nav-links">
-        <RouterLink v-for="item in navigation" :key="item.to" :to="item.to" class="nav-link" :class="{ active: isActive(item.to) }" :title="isCollapsed ? item.label : ''">
+        <RouterLink v-for="item in navigation" :key="item.to" :to="item.to" class="nav-link" :class="{ active: isActive(item.to) }" :title="isCollapsed ? t(item.labelKey) : ''">
           <span class="nav-icon" v-html="item.icon"></span>
-          <span v-show="!isCollapsed" class="nav-text">{{ item.label }}</span>
+          <span v-show="!isCollapsed" class="nav-text">{{ t(item.labelKey) }}</span>
         </RouterLink>
       </div>
 
       <div class="sidebar-footer">
         <div v-show="!isCollapsed" class="help-card">
           <span class="help-icon">?</span>
-          <div><strong>Need help?</strong><small>Visit the community forum</small></div>
+          <div><strong>{{ t('needHelp') }}</strong><small>{{ t('visitForum') }}</small></div>
         </div>
         <button class="user-section" type="button" @click.stop="toggleUserMenu">
           <span class="avatar-initials">{{ userInitials }}</span>
-          <span v-show="!isCollapsed" class="user-info"><strong>{{ userName }}</strong><small>{{ userEmail || 'Account settings' }}</small></span>
+          <span v-show="!isCollapsed" class="user-info"><strong>{{ userName }}</strong><small>{{ userEmail || t('accountSettings') }}</small></span>
           <svg v-show="!isCollapsed" class="chevron" :class="{ rotated: showUserMenu }" viewBox="0 0 24 24" fill="none"><path d="m6 9 6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" /></svg>
         </button>
         <div v-if="showUserMenu && !isCollapsed" class="user-dropdown">
-          <button type="button" @click="navigateToProfile"><span>My profile</span><span>›</span></button>
-          <button type="button" @click="openSettings"><span>Preferences</span><span>›</span></button>
-          <button type="button" class="logout" @click="handleLogout">Sign out</button>
+          <button type="button" @click="navigateToProfile"><span>{{ t('myProfile') }}</span><span>›</span></button>
+          <button type="button" @click="openSettings"><span>{{ t('preferences') }}</span><span>›</span></button>
+          <button type="button" class="logout" @click="handleLogout">{{ t('signOut') }}</button>
         </div>
       </div>
     </nav>
@@ -46,26 +46,28 @@
 import { computed, ref, watch, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '../store/auth'
+import { useLanguage } from '../store/language'
 
 const emit = defineEmits(['close', 'openSettings'])
 const props = defineProps({ isOpen: { type: Boolean, default: true } })
 const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
+const { t } = useLanguage()
 const isCollapsed = ref(false)
 const showUserMenu = ref(false)
 
 const icon = path => `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="${path}" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" /></svg>`
 const navigation = [
-  { to: '/dashboard', label: 'Dashboard', icon: icon('m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1V10Z') },
-  { to: '/upload', label: 'New scan', icon: icon('M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5M5 14v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5') },
-  { to: '/history', label: 'Scan history', icon: icon('M3 12a9 9 0 1 0 3-6.7M3 4v5h5m4-4v7l4 2') },
-  { to: '/diseases', label: 'Disease guide', icon: icon('M12 21c4-2.3 7-5.5 7-10a7 7 0 0 0-14 0c0 4.5 3 7.7 7 10Zm0-10v5m-2.5-2.5h5') },
-  { to: '/forum', label: 'Community', icon: icon('M20 15a3 3 0 0 1-3 3H9l-5 3V6a3 3 0 0 1 3-3h10a3 3 0 0 1 3 3v9ZM8 9h8m-8 4h5') },
-  { to: '/profile', label: 'My profile', icon: icon('M20 21a8 8 0 0 0-16 0m8-10a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z') }
+  { to: '/dashboard', labelKey: 'dashboard', icon: icon('m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1V10Z') },
+  { to: '/upload', labelKey: 'newScan', icon: icon('M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5M5 14v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5') },
+  { to: '/history', labelKey: 'scanHistory', icon: icon('M3 12a9 9 0 1 0 3-6.7M3 4v5h5m4-4v7l4 2') },
+  { to: '/diseases', labelKey: 'diseaseGuide', icon: icon('M12 21c4-2.3 7-5.5 7-10a7 7 0 0 0-14 0c0 4.5 3 7.7 7 10Zm0-10v5m-2.5-2.5h5') },
+  { to: '/forum', labelKey: 'community', icon: icon('M20 15a3 3 0 0 1-3 3H9l-5 3V6a3 3 0 0 1 3-3h10a3 3 0 0 1 3 3v9ZM8 9h8m-8 4h5') },
+  { to: '/profile', labelKey: 'myProfile', icon: icon('M20 21a8 8 0 0 0-16 0m8-10a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z') }
 ]
 
-const userName = computed(() => authStore.user?.displayName || authStore.user?.email?.split('@')[0] || 'User')
+const userName = computed(() => authStore.user?.displayName || authStore.user?.email?.split('@')[0] || t('user'))
 const userEmail = computed(() => authStore.user?.email || '')
 const userInitials = computed(() => userName.value.split(' ').map(word => word[0]).join('').slice(0, 2).toUpperCase())
 const isActive = target => route.path === target || (target === '/dashboard' && route.path === '/')

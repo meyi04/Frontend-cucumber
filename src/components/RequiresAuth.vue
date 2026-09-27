@@ -2,20 +2,20 @@
   <div v-if="authStore.loading" class="flex items-center justify-center min-h-screen">
     <div class="text-center">
       <div class="spinner"></div>
-      <p class="mt-4 text-gray-600">Loading...</p>
+      <p class="mt-4 text-gray-600">{{ t('loading') }}</p>
     </div>
   </div>
   
   <div v-else-if="!authStore.isAuthenticated">
     <div class="flex items-center justify-center min-h-screen">
       <div class="text-center">
-        <h2 class="text-2xl font-bold text-gray-800 mb-4">Access Denied</h2>
-        <p class="text-gray-600 mb-6">You need to be logged in to view this page.</p>
+        <h2 class="text-2xl font-bold text-gray-800 mb-4">{{ t('accessDenied') }}</h2>
+        <p class="text-gray-600 mb-6">{{ t('loginRequired') }}</p>
         <router-link 
           to="/login" 
           class="px-6 py-3 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition"
         >
-          Go to Login
+          {{ t('goToLogin') }}
         </router-link>
       </div>
     </div>
@@ -26,8 +26,10 @@
 
 <script setup>
 import { useAuthStore } from '../store/auth'
+import { useLanguage } from '../store/language'
 
 const authStore = useAuthStore()
+const { t } = useLanguage()
 </script>
 
 <style scoped>

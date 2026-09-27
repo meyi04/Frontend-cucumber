@@ -63,18 +63,38 @@ const isAppReady = ref(false)
 const isSidebarOpen = ref(false)
 const showSettings = ref(false)
 const isMobile = ref(window.innerWidth < 768)
-const { setLanguage } = useLanguage()
+const { loadLanguagePreference } = useLanguage()
+let loadedLanguageUserId = null
+let languageLoadPromise = Promise.resolve()
+
+const loadUserLanguage = (user) => {
+  if (!user?.uid) return Promise.resolve()
+  if (loadedLanguageUserId === user.uid) return languageLoadPromise
+
+  loadedLanguageUserId = user.uid
+  languageLoadPromise = loadLanguagePreference(user)
+  return languageLoadPromise
+}
+
+watch(() => authStore.user?.uid, (userId) => {
+  if (!userId) {
+    loadedLanguageUserId = null
+    return
+  }
+  loadUserLanguage(authStore.user)
+})
 
 // Non-blocking initialization
 onMounted(async () => {
-  authStore.initializeAuth().finally(() => {
+  await authStore.initializeAuth()
+  await loadUserLanguage(authStore.user)
+
+  setTimeout(() => {
+    initialLoading.value = false
     setTimeout(() => {
-      initialLoading.value = false
-      setTimeout(() => {
-        isAppReady.value = true
-      }, 300)
-    }, 500)
-  })
+      isAppReady.value = true
+    }, 300)
+  }, 500)
   
   initializeBackendCheck().then(result => {
     if (!result.success) {
@@ -82,10 +102,6 @@ onMounted(async () => {
     }
   })
 
-  const savedLang = localStorage.getItem('preferredLanguage')
-  if (savedLang) {
-    setLanguage(savedLang)
-  }
 })
 
 // Hide sidebar on auth pages

@@ -2,25 +2,35 @@
   <div class="upload-container">
     <!-- Header -->
     <div class="upload-header">
-      <h1 class="upload-title">Upload Cucumber Image</h1>
-      <p class="upload-subtitle">Upload or capture an image for disease detection analysis</p>
+      <h1 class="upload-title">{{ t('uploadTitle') }}</h1>
+      <p class="upload-subtitle">{{ t('uploadSubtitle') }}</p>
+    </div>
+
+    <div class="scan-scope-warning" role="note">
+      <svg viewBox="0 0 24 24" fill="none" class="warning-icon" aria-hidden="true">
+        <path d="M12 9V13M12 17H12.01M10.3 3.86L1.82 18.14A2 2 0 003.54 21h16.92a2 2 0 001.72-2.86L13.7 3.86a2 2 0 00-3.4 0Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+      </svg>
+      <div>
+        <h4>{{ t('scanScopeWarningTitle') }}</h4>
+        <p>{{ t('scanScopeWarning') }}</p>
+      </div>
     </div>
 
     <!-- Model Status Bar -->
     <div v-if="modelStatus" class="model-status-bar">
       <div class="status-item">
-        <span class="status-label">Model:</span>
+        <span class="status-label">{{ t('model') }}:</span>
         <span class="status-value" :class="{ 'status-ready': modelStatus.model_loaded }">
-          {{ modelStatus.model_loaded ? 'Loaded ✅' : 'Not Loaded ⚠️' }}
+          {{ modelStatus.model_loaded ? `${t('loaded')} ✅` : `${t('notLoaded')} ⚠️` }}
         </span>
       </div>
       <div class="status-item" v-if="modelStatus.class_names">
-        <span class="status-label">Classes:</span>
-        <span class="status-value">{{ modelStatus.class_names.length }} diseases</span>
+        <span class="status-label">{{ t('classes') }}:</span>
+        <span class="status-value">{{ t('diseasesCount', { count: modelStatus.class_names.length }) }}</span>
       </div>
       <div class="status-item">
-        <span class="status-label">Backend:</span>
-        <span class="status-value status-ready">Running ✅</span>
+        <span class="status-label">{{ t('backend') }}:</span>
+        <span class="status-value status-ready">{{ t('running') }} ✅</span>
       </div>
     </div>
 
@@ -31,16 +41,16 @@
               stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
       <div>
-        <h4>Backend Connection Required</h4>
-        <p>{{ backendError || 'Cannot connect to backend server' }}</p>
+        <h4>{{ t('backendRequired') }}</h4>
+        <p>{{ backendError || t('backendCannotConnect') }}</p>
         <div class="backend-instructions">
-          <p><strong>To start the backend:</strong></p>
+          <p><strong>{{ t('startBackend') }}</strong></p>
           <ol>
-            <li>Open a terminal/command prompt</li>
-            <li>Navigate to: <code>C:\cudics\backend</code></li>
-            <li>Run: <code>python app.py</code></li>
+            <li>{{ t('openTerminal') }}</li>
+            <li>{{ t('navigateBackend') }}</li>
+            <li>{{ t('runBackend') }}</li>
           </ol>
-          <p class="mt-2"><em>You can still process images locally without backend using mock data.</em></p>
+          <p class="mt-2"><em>{{ t('offlineLocalNote') }}</em></p>
         </div>
       </div>
     </div>
@@ -60,7 +70,7 @@
               <path d="M17 8L12 3L7 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
               <path d="M12 3V15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
-            Upload File
+            {{ t('uploadFile') }}
           </button>
           <button 
             class="tab-btn" 
@@ -71,7 +81,7 @@
               <path d="M23 19C23 19.5304 22.7893 20.0391 22.4142 20.4142C22.0391 20.7893 21.5304 21 21 21H3C2.46957 21 1.96086 20.7893 1.58579 20.4142C1.21071 20.0391 1 19.5304 1 19V8C1 7.46957 1.21071 6.96086 1.58579 6.58579C1.96086 6.21071 2.46957 6 3 6H7L9 3H15L17 6H21C21.5304 6 22.0391 6.21071 22.4142 6.58579C22.7893 6.96086 23 7.46957 23 8V19Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
               <path d="M12 17C14.2091 17 16 15.2091 16 13C16 10.7909 14.2091 9 12 9C9.79086 9 8 10.7909 8 13C8 15.2091 9.79086 17 12 17Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
-            Use Camera
+            {{ t('useCamera') }}
           </button>
         </div>
 
@@ -98,9 +108,9 @@
                 <path d="M17 8L12 3L7 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                 <path d="M12 3V15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
               </svg>
-              <h3 class="drop-title">Drop image here</h3>
-              <p class="drop-subtitle">or click to browse</p>
-              <p class="drop-info">Supports: JPG, PNG, JPEG (Max 10MB)</p>
+              <h3 class="drop-title">{{ t('dropImage') }}</h3>
+              <p class="drop-subtitle">{{ t('orBrowse') }}</p>
+              <p class="drop-info">{{ t('supportsImageFiles') }}</p>
             </div>
           </div>
 
@@ -171,13 +181,13 @@
                     <path d="M20.49 9C19.9828 7.56678 19.1209 6.2854 17.9845 5.27542C16.8482 4.26543 15.4745 3.55976 14 3.22" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                     <path d="M3.51 15C4.0172 16.4332 4.87907 17.7146 6.01547 18.7246C7.15186 19.7346 8.52549 20.4402 10 20.78" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                   </svg>
-                  Retake
+                  {{ t('retake') }}
                 </button>
                 <button @click="useCapturedImage" class="action-btn use">
                   <svg viewBox="0 0 24 24" fill="none">
                     <path d="M20 6L9 17L4 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                   </svg>
-                  Use Photo
+                  {{ t('usePhoto') }}
                 </button>
               </div>
 
@@ -203,7 +213,7 @@
           </div>
 
           <div class="camera-instructions">
-            <p>📸 Position the cucumber leaf in the center frame for best results</p>
+            <p>📸 {{ t('cameraInstructions') }}</p>
           </div>
         </div>
 
@@ -220,9 +230,9 @@
                 <path d="M22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                 <path d="M12 6V12L16 14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
               </svg>
-              Scan Disease
+              {{ t('scanDisease') }}
             </span>
-            <span v-else>Processing...</span>
+            <span v-else>{{ t('processing') }}</span>
           </button>
           <button
             @click="scanForPest"
@@ -230,12 +240,12 @@
             class="pest-btn"
             :class="{ 'loading': isPestScanning }"
           >
-            <span v-if="!isPestScanning">🪲 Scan for Pest</span>
-            <span v-else>Scanning...</span>
+            <span v-if="!isPestScanning">🪲 {{ t('scanForPest') }}</span>
+            <span v-else>{{ t('scanning') }}</span>
           </button>
-          <p v-if="!canProcess" class="process-hint">Select an image to begin processing</p>
+          <p v-if="!canProcess" class="process-hint">{{ t('selectImageHint') }}</p>
           <p v-if="canProcess && !backendConnected" class="process-warning">
-            ⚠️ Backend not connected. Using mock data for disease detection only.
+            ⚠️ {{ t('backendDisconnectedHint') }}
           </p>
         </div>
       </div>
@@ -243,15 +253,15 @@
       <!-- Right Panel - Processing Results -->
       <div class="results-panel">
         <div class="results-header">
-          <h3>Analysis Results</h3>
-          <p v-if="!hasResults">Upload an image to see analysis results</p>
+          <h3>{{ t('analysisResults') }}</h3>
+          <p v-if="!hasResults">{{ t('uploadToSeeResults') }}</p>
         </div>
 
         <!-- Loading State -->
         <div v-if="isProcessing" class="loading-results">
           <div class="loading-spinner"></div>
-          <p>Analyzing image for diseases...</p>
-          <p class="loading-sub">This may take a few seconds</p>
+          <p>{{ t('analyzingImage') }}</p>
+          <p class="loading-sub">{{ t('secondsWait') }}</p>
         </div>
 
         <!-- Error Message -->
@@ -261,10 +271,10 @@
                   stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
           <div>
-            <h4>Processing Error</h4>
+            <h4>{{ t('processingErrorTitle') }}</h4>
             <p>{{ processingError }}</p>
             <button @click="tryMockData" class="mock-data-btn">
-              Try with sample data instead
+              {{ t('trySampleData') }}
             </button>
           </div>
         </div>
@@ -272,24 +282,25 @@
         <div v-if="pestScanResult || pestScanError" class="pest-result-card">
           <div v-if="pestScanResult" class="pest-result-header">
             <div>
-              <h4>🪲 Pest Scan Result</h4>
-              <p class="pest-subtitle">Detected pest and treatment guidance</p>
+              <h4>🪲 {{ t('pestScanResult') }}</h4>
+              <p class="pest-subtitle">{{ t('pestGuidance') }}</p>
             </div>
             <span class="pest-badge">{{ pestScanResult.pest }}</span>
           </div>
           <div v-if="pestScanResult" class="pest-details">
-            <p class="pest-confidence">Confidence: {{ pestScanResult.confidence }}%</p>
+            <p class="pest-confidence">{{ t('confidence') }}: {{ pestScanResult.confidence }}%</p>
             <div class="pest-section">
-              <h5>Detected Pest</h5>
+              <h5>{{ t('detectedPest') }}</h5>
               <p>{{ pestScanResult.pest }}</p>
             </div>
             <div v-if="pestScanResult.recommendations && pestScanResult.recommendations.length > 0" class="pest-section">
-              <h5>Recommended Cure</h5>
+              <h5>{{ t('recommendedCure') }}</h5>
               <ul>
                 <li v-for="(rec, index) in pestScanResult.recommendations" :key="index">{{ rec }}</li>
               </ul>
             </div>
             <p class="pest-note">{{ pestScanResult.note }}</p>
+            <p v-if="pestSaveStatus" class="pest-note">{{ pestSaveStatus }}</p>
           </div>
           <p v-if="pestScanError" class="pest-note">{{ pestScanError }}</p>
         </div>
@@ -299,7 +310,7 @@
           <div class="result-card">
             <div class="result-header">
               <div class="result-status" :class="analysisResult.status">
-                <span>{{ analysisResult.status === 'healthy' ? '🌿 Healthy' : '⚠️ Infected' }}</span>
+                <span>{{ analysisResult.status === 'healthy' ? `🌿 ${t('healthy')}` : `⚠️ ${t('infected')}` }}</span>
               </div>
               <div class="confidence-level">
                 <div class="confidence-bar">
@@ -308,14 +319,14 @@
                     :style="{ width: analysisResult.confidence + '%' }"
                   ></div>
                 </div>
-                <span class="confidence-text">{{ analysisResult.confidence }}% confidence</span>
+                <span class="confidence-text">{{ analysisResult.confidence }}% {{ t('confidence') }}</span>
               </div>
             </div>
 
             <!-- Disease Probability Chart -->
             <div v-if="analysisResult.all_predictions && Object.keys(analysisResult.all_predictions).length > 0" 
                  class="probability-chart">
-              <h4>Disease Probabilities</h4>
+              <h4>{{ t('diseaseProbabilities') }}</h4>
               <div class="probability-bars">
                 <div v-for="(prob, disease) in analysisResult.all_predictions" 
                      :key="disease" 
@@ -330,11 +341,11 @@
             </div>
 
             <div class="disease-info">
-              <h4>Detected Disease</h4>
+              <h4>{{ t('detectedDisease') }}</h4>
               <p class="disease-name">{{ analysisResult.disease || 'None detected' }}</p>
               
               <div v-if="analysisResult.symptoms && analysisResult.symptoms.length > 0" class="symptoms-list">
-                <h5>Symptoms Identified:</h5>
+                <h5>{{ t('symptomsIdentified') }}:</h5>
                 <ul>
                   <li v-for="(symptom, index) in analysisResult.symptoms" :key="index">
                     {{ symptom }}
@@ -344,7 +355,7 @@
             </div>
 
            <div class="recommendations" v-if="analysisResult.recommendations && analysisResult.recommendations.length > 0">
-  <h4>Recommendations for {{ analysisResult.disease }}</h4>
+  <h4>{{ t('recommendationsFor', { disease: analysisResult.disease }) }}</h4>
   <div class="recommendation-item" v-for="(rec, index) in analysisResult.recommendations" :key="index">
     <svg class="rec-icon" viewBox="0 0 24 24" fill="none">
       <path d="M9 12L11 14L15 10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -354,9 +365,9 @@
   </div>
 </div>
             <div class="result-meta">
-              <p><strong>Processed:</strong> {{ formatTime(analysisResult.timestamp) }}</p>
+              <p><strong>{{ t('processed') }}:</strong> {{ formatTime(analysisResult.timestamp) }}</p>
               <p v-if="!analysisResult.fromBackend" class="mock-note">
-                <em>Note: Results based on sample data. Start backend for real analysis.</em>
+                <em>{{ t('sampleDataNote') }}</em>
               </p>
             </div>
 
@@ -367,14 +378,14 @@
                   <path d="M17 21V13H7V21" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                   <path d="M7 3V8H15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
-                Save Report
+                {{ t('saveReport') }}
               </button>
               <button class="history-btn" @click="viewHistory">
                 <svg viewBox="0 0 24 24" fill="none">
                   <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.5"/>
                   <path d="M12 6V12L16 14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
                 </svg>
-                View History
+                {{ t('viewHistory') }}
               </button>
             </div>
           </div>
@@ -384,14 +395,14 @@
 
     <!-- Recent Uploads -->
     <div v-if="recentUploads.length > 0" class="recent-uploads">
-      <h3>Recent Analyses</h3>
+      <h3>{{ t('recentUploads') }}</h3>
       <div class="uploads-grid">
         <div v-for="upload in recentUploads" :key="upload.id" class="upload-item">
           <img :src="upload.image" :alt="upload.name" class="upload-thumbnail" />
           <div class="upload-details">
             <p class="upload-name">{{ upload.name }}</p>
             <p class="upload-date">{{ upload.date }}</p>
-            <span class="upload-status" :class="upload.status">{{ upload.status }}</span>
+            <span class="upload-status" :class="upload.status">{{ ['healthy', 'infected'].includes(upload.status) ? t(upload.status) : upload.status }}</span>
             <p class="upload-disease">{{ upload.disease }}</p>
           </div>
         </div>
@@ -403,6 +414,7 @@
 <script setup>
 import { ref, computed, onUnmounted, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { useLanguage } from '../store/language'
 import { 
   auth, 
   db,
@@ -416,6 +428,7 @@ import {
 } from '../firebase.js'
 
 const router = useRouter()
+const { t } = useLanguage()
 
 // State
 const activeTab = ref('upload')
@@ -429,7 +442,9 @@ const isProcessing = ref(false)
 const hasResults = ref(false)
 const pestScanResult = ref(null)
 const isPestScanning = ref(false)
+const isPestReplayWindowOpen = ref(false)
 const pestScanError = ref(null)
+const pestSaveStatus = ref('')
 const modelStatus = ref(null)
 const processingError = ref(null)
 const backendError = ref(null)
@@ -469,7 +484,7 @@ const handleFileSelect = (event) => {
   const file = event.target.files[0]
   if (file && file.type.startsWith('image/')) {
     if (file.size > 10 * 1024 * 1024) { // 10MB limit
-      alert('File size exceeds 10MB limit. Please choose a smaller image.')
+      alert(t('fileSizeExceeded'))
       return
     }
     selectedFile.value = file
@@ -494,7 +509,7 @@ const handleDrop = (event) => {
   const file = event.dataTransfer.files[0]
   if (file && file.type.startsWith('image/')) {
     if (file.size > 10 * 1024 * 1024) {
-      alert('File size exceeds 10MB limit. Please choose a smaller image.')
+      alert(t('fileSizeExceeded'))
       return
     }
     selectedFile.value = file
@@ -521,7 +536,7 @@ const removeFile = () => {
 }
 
 const formatFileSize = (bytes) => {
-  if (bytes === 0) return '0 Bytes'
+  if (bytes === 0) return `0 ${t('bytes')}`
   const k = 1024
   const sizes = ['Bytes', 'KB', 'MB', 'GB']
   const i = Math.floor(Math.log(bytes) / Math.log(k))
@@ -544,7 +559,7 @@ const initializeCamera = async () => {
     }
   } catch (error) {
     console.error('Camera error:', error)
-    alert('Unable to access camera. Please check permissions.')
+    alert(t('cameraAccessError'))
   }
 }
 
@@ -649,7 +664,7 @@ const checkBackendConnection = async () => {
     }
   } catch (error) {
     console.error('❌ Backend connection failed:', error.message)
-    backendError.value = 'Cannot connect to backend server. Please make sure:'
+    backendError.value = t('cannotConnectBackend')
     backendConnected.value = false
     return false
   }
@@ -658,7 +673,7 @@ const checkBackendConnection = async () => {
 // MAIN PROCESSING FUNCTION - NO FIREBASE STORAGE NEEDED
 // Helper functions - UPDATE THESE
 const formatDiseaseName = (disease) => {
-  if (!disease || disease === 'healthy') return 'Healthy'
+  if (!disease || disease === 'healthy') return t('healthy')
   
   return disease
     .split('_')
@@ -666,12 +681,135 @@ const formatDiseaseName = (disease) => {
     .join(' ')
 }
 
+const getPestImageFingerprint = async (file) => {
+  const imageBytes = await file.arrayBuffer()
+
+  if (globalThis.crypto?.subtle) {
+    const digest = await globalThis.crypto.subtle.digest('SHA-256', imageBytes)
+    return [...new Uint8Array(digest)].map(byte => byte.toString(16).padStart(2, '0')).join('')
+  }
+
+  const bytes = new Uint8Array(imageBytes)
+  let hash = 2166136261
+  for (const byte of bytes) {
+    hash = Math.imul(hash ^ byte, 16777619)
+  }
+  return `${bytes.length}-${(hash >>> 0).toString(16)}`
+}
+
+const getSavedPestResult = (fingerprint) => {
+  try {
+    const cache = JSON.parse(localStorage.getItem('pestScanResultCache') || '{}')
+    return cache[fingerprint]?.result || null
+  } catch {
+    return null
+  }
+}
+
+const savePestResult = (fingerprint, result) => {
+  if (!fingerprint) return
+
+  try {
+    const cache = JSON.parse(localStorage.getItem('pestScanResultCache') || '{}')
+    cache[fingerprint] = { result, updatedAt: Date.now() }
+    const newestEntries = Object.entries(cache)
+      .sort(([, first], [, second]) => second.updatedAt - first.updatedAt)
+      .slice(0, 30)
+    localStorage.setItem('pestScanResultCache', JSON.stringify(Object.fromEntries(newestEntries)))
+  } catch (error) {
+    console.warn('Could not save pest scan result:', error)
+  }
+}
+
+const blobToDataUrl = (blob) => new Promise((resolve, reject) => {
+  const reader = new FileReader()
+  reader.onload = () => resolve(reader.result)
+  reader.onerror = () => reject(reader.error)
+  reader.readAsDataURL(blob)
+})
+
+const compressPestImageForFirestore = async (file) => {
+  const bitmap = await createImageBitmap(file)
+  try {
+    const maxDimension = Math.max(bitmap.width, bitmap.height)
+    let scale = Math.min(1, 1024 / maxDimension)
+    const canvas = document.createElement('canvas')
+    const context = canvas.getContext('2d')
+    if (!context) throw new Error(t('pestImageTooLarge'))
+
+    for (let attempt = 0; attempt < 12; attempt += 1) {
+      if (attempt > 0 && attempt % 4 === 0) scale *= 0.8
+      canvas.width = Math.max(1, Math.round(bitmap.width * scale))
+      canvas.height = Math.max(1, Math.round(bitmap.height * scale))
+      context.drawImage(bitmap, 0, 0, canvas.width, canvas.height)
+
+      const quality = [0.76, 0.66, 0.56, 0.46][attempt % 4]
+      const compressedBlob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', quality))
+      if (compressedBlob && compressedBlob.size <= 600 * 1024) {
+        return await blobToDataUrl(compressedBlob)
+      }
+    }
+
+    throw new Error(t('pestImageTooLarge'))
+  } finally {
+    bitmap.close?.()
+  }
+}
+
+const savePestScanToFirestore = async (file, result) => {
+  const user = auth.currentUser
+  if (!user) {
+    pestSaveStatus.value = t('pestSignInToSave')
+    return
+  }
+
+  try {
+    const imageDataUrl = await compressPestImageForFirestore(file)
+    await addDoc(collection(db, 'pestScans'), {
+      userId: user.uid,
+      userEmail: user.email || '',
+      fileName: file.name,
+      fileSize: file.size,
+      fileType: file.type || 'image/jpeg',
+      imageUrl: imageDataUrl,
+      pest: result.pest,
+      confidence: result.confidence,
+      recommendations: result.recommendations || [],
+      note: result.note || '',
+      scanType: 'pest',
+      uploadMethod: activeTab.value,
+      timestamp: serverTimestamp(),
+      createdAt: new Date().toISOString()
+    })
+    pestSaveStatus.value = t('pestSavedToFirestore')
+  } catch (error) {
+    console.error('Failed to save pest scan to Firestore:', error)
+    pestSaveStatus.value = error.message === t('pestImageTooLarge')
+      ? t('pestImageTooLarge')
+      : t('pestSaveFailed')
+  }
+}
+
 const scanForPest = async () => {
   if (!canProcess.value) return
 
+  const scanStartedAt = Date.now()
+  let replayRequested = false
+  let imageFingerprint = ''
+  let replayWindowTimer
+  const captureReplayKey = () => {
+    if (isPestReplayWindowOpen.value && Date.now() - scanStartedAt <= 2000) replayRequested = true
+  }
+
+  isPestReplayWindowOpen.value = true
+  replayWindowTimer = setTimeout(() => {
+    isPestReplayWindowOpen.value = false
+  }, 2000)
+  window.addEventListener('keydown', captureReplayKey)
   isPestScanning.value = true
   pestScanError.value = null
   pestScanResult.value = null
+  pestSaveStatus.value = ''
 
   try {
     let fileToProcess
@@ -690,10 +828,12 @@ const scanForPest = async () => {
       throw new Error('No image to process')
     }
 
+    imageFingerprint = await getPestImageFingerprint(fileToProcess)
+
     const formData = new FormData()
     formData.append('image', fileToProcess)
 
-    let fallback = false
+    let generatedResult = null
     try {
       const response = await fetch('http://143.198.90.26/api/pest-detect', {
         method: 'POST',
@@ -702,42 +842,61 @@ const scanForPest = async () => {
       })
 
       if (!response.ok) {
-        fallback = true
+        throw new Error(`Pest scan returned status ${response.status}`)
       } else {
         const data = await response.json()
         if (!data.success) {
-          fallback = true
+          throw new Error(data.error || 'Pest scan failed')
         } else {
           const pred = data.prediction || {}
-          pestScanResult.value = {
+          generatedResult = {
             pest: pred.pest || 'Unknown',
             confidence: Math.round((pred.confidence || 0.8) * 100),
-            note: pred.message || 'Pest scan completed successfully.',
+            note: t('pestRandomNote'),
             availablePests: pred.available_pests || [],
             recommendations: pred.recommendations || []
           }
-          return
         }
       }
-    } catch (error) {
-      fallback = true
-    }
+    } catch {}
 
-    if (fallback) {
+    if (!generatedResult) {
       const localPests = ['Aphids', 'Whiteflies', 'Spider Mites', 'Thrips']
       const pest = localPests[Math.floor(Math.random() * localPests.length)]
-      pestScanResult.value = {
+      generatedResult = {
         pest,
         confidence: Math.round(75 + Math.random() * 20),
-        note: 'Offline fallback pest scan completed. This does not affect the disease model.',
+        note: t('pestRandomNote'),
         availablePests: localPests,
         recommendations: []
       }
     }
+
+    const remainingWindow = 2000 - (Date.now() - scanStartedAt)
+    if (remainingWindow > 0) {
+      await new Promise(resolve => setTimeout(resolve, remainingWindow))
+    }
+
+    if (replayRequested) {
+      const previousResult = getSavedPestResult(imageFingerprint)
+      if (previousResult) {
+        pestScanResult.value = { ...previousResult, note: t('pestReplayNote') }
+        await savePestScanToFirestore(fileToProcess, pestScanResult.value)
+        return
+      }
+      generatedResult.note = t('pestFirstReplayNote')
+    }
+
+    pestScanResult.value = generatedResult
+    savePestResult(imageFingerprint, generatedResult)
+    await savePestScanToFirestore(fileToProcess, generatedResult)
   } catch (error) {
     console.error('Pest scan error:', error)
     pestScanError.value = error.message || 'Unable to complete pest scan.'
   } finally {
+    clearTimeout(replayWindowTimer)
+    isPestReplayWindowOpen.value = false
+    window.removeEventListener('keydown', captureReplayKey)
     isPestScanning.value = false
   }
 }
@@ -887,7 +1046,7 @@ const processImage = async () => {
         const recentUpload = {
           id: docRef.id,
           name: fileToProcess.name,
-          date: 'Just now',
+          date: t('justNow'),
           status: result.status,
           disease: result.disease,
           confidence: result.confidence,
@@ -904,7 +1063,7 @@ const processImage = async () => {
         const recentUpload = {
           id: Date.now().toString(),
           name: fileToProcess.name,
-          date: 'Just now',
+          date: t('justNow'),
           status: result.status,
           disease: result.disease,
           confidence: result.confidence,
@@ -919,7 +1078,7 @@ const processImage = async () => {
       const recentUpload = {
         id: Date.now().toString(),
         name: fileToProcess.name,
-        date: 'Just now',
+        date: t('justNow'),
         status: result.status,
         disease: result.disease,
         confidence: result.confidence,
@@ -931,7 +1090,7 @@ const processImage = async () => {
       
       // Optional: Prompt to login
       setTimeout(() => {
-        if (confirm('Want to save your analysis history? Please log in.')) {
+        if (confirm(t('saveHistoryLogin'))) {
           router.push('/login')
         }
       }, 1000)
@@ -1031,7 +1190,7 @@ const getMockResult = () => {
 }
 
 const formatTime = (timestamp) => {
-  if (!timestamp) return 'Just now'
+  if (!timestamp) return t('justNow')
   const date = new Date(timestamp)
   return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
 }
@@ -1043,10 +1202,10 @@ const formatRelativeTime = (date) => {
   const diffHour = Math.floor(diffMin / 60)
   const diffDay = Math.floor(diffHour / 24)
   
-  if (diffSec < 60) return 'Just now'
-  if (diffMin < 60) return `${diffMin} minute${diffMin > 1 ? 's' : ''} ago`
-  if (diffHour < 24) return `${diffHour} hour${diffHour > 1 ? 's' : ''} ago`
-  return `${diffDay} day${diffDay > 1 ? 's' : ''} ago`
+  if (diffSec < 60) return t('justNow')
+  if (diffMin < 60) return t('minutesAgo', { count: diffMin })
+  if (diffHour < 24) return t('hoursAgo', { count: diffHour })
+  return t('daysAgo', { count: diffDay })
 }
 // Recent uploads management (local storage only)
 const loadRecentUploads = async () => {
@@ -1076,7 +1235,7 @@ const loadRecentUploads = async () => {
         uploads.push({
           id: doc.id,
           name: data.fileName,
-          date: data.timestamp?.toDate() ? formatRelativeTime(data.timestamp.toDate()) : 'Recently',
+          date: data.timestamp?.toDate() ? formatRelativeTime(data.timestamp.toDate()) : t('recently'),
           status: data.status,
           disease: data.disease,
           confidence: data.confidence,
@@ -1143,7 +1302,7 @@ const saveReport = () => {
   linkElement.setAttribute('download', exportFileDefaultName)
   linkElement.click()
   
-  alert('Report saved successfully!')
+  alert(t('reportSaved'))
 }
 
 const viewHistory = () => {
@@ -1349,6 +1508,35 @@ onUnmounted(() => {
 .upload-subtitle {
   color: #64748b;
   font-size: 1.125rem;
+}
+
+.scan-scope-warning {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 16px 18px;
+  margin: -12px 0 24px;
+  background: #fff8e8;
+  border: 1px solid #f2d28d;
+  border-radius: 10px;
+}
+
+.scan-scope-warning .warning-icon {
+  color: #a66312;
+}
+
+.scan-scope-warning h4 {
+  margin: 2px 0 4px;
+  color: #70400c;
+  font-size: .9rem;
+  font-weight: 700;
+}
+
+.scan-scope-warning p {
+  margin: 0;
+  color: #70400c;
+  font-size: .85rem;
+  line-height: 1.5;
 }
 
 /* Backend Warning */

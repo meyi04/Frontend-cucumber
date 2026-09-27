@@ -12,15 +12,15 @@
       <div class="diseases-header">
         <div class="header-left">
           <div class="header-badge">
-            <span class="badge-text">Disease Reference</span>
+            <span class="badge-text">{{ t('diseaseReference') }}</span>
             <div class="badge-glow"></div>
           </div>
           <h1 class="page-title">
-            <span class="title-line">Cucumber Disease</span>
-            <span class="title-line gradient-text">Knowledge Base</span>
+            <span class="title-line">{{ t('cucumberDisease') }}</span>
+            <span class="title-line gradient-text">{{ t('knowledgeBase') }}</span>
           </h1>
           <p class="page-subtitle">
-            Comprehensive guide to identifying, preventing, and treating cucumber diseases.
+            {{ t('diseaseGuideSubtitle') }}
           </p>
         </div>
 
@@ -36,7 +36,7 @@
                 v-model="searchQuery"
                 type="text"
                 class="search-input"
-                placeholder="Search diseases..."
+                :placeholder="t('searchDiseases')"
               />
               <div v-if="searchQuery" class="search-clear" @click="clearSearch">
                 <svg viewBox="0 0 24 24" fill="none">
@@ -54,7 +54,7 @@
               @click="toggleCategory(category.value)"
               class="filter-btn"
             >
-              {{ category.label }}
+              {{ t(category.labelKey) }}
               <span class="filter-count">{{ getCategoryCount(category.value) }}</span>
             </button>
           </div>
@@ -72,7 +72,7 @@
           </div>
           <div class="stat-content">
             <div class="stat-value">{{ diseases.length }}</div>
-            <div class="stat-label">Total Diseases</div>
+            <div class="stat-label">{{ t('totalDiseases') }}</div>
           </div>
         </div>
         <div class="stat-item">
@@ -84,7 +84,7 @@
           </div>
           <div class="stat-content">
             <div class="stat-value">{{ highSeverityCount }}</div>
-            <div class="stat-label">High Risk</div>
+            <div class="stat-label">{{ t('highRisk') }}</div>
           </div>
         </div>
         <div class="stat-item">
@@ -96,7 +96,7 @@
           </div>
           <div class="stat-content">
             <div class="stat-value">{{ fungalCount }}</div>
-            <div class="stat-label">Fungal</div>
+            <div class="stat-label">{{ t('fungal') }}</div>
           </div>
         </div>
         <div class="stat-item">
@@ -109,16 +109,16 @@
           </div>
           <div class="stat-content">
             <div class="stat-value">{{ bacterialCount }}</div>
-            <div class="stat-label">Bacterial</div>
+            <div class="stat-label">{{ t('bacterial') }}</div>
           </div>
         </div>
       </div>
 
       <!-- Search Results Info -->
       <div class="results-info">
-        <span>Showing <strong>{{ filteredDiseases.length }}</strong> of <strong>{{ diseases.length }}</strong> diseases</span>
+        <span>{{ t('showingDiseases', { shown: filteredDiseases.length, total: diseases.length }) }}</span>
         <button v-if="hasActiveFilters" @click="resetFilters" class="reset-link">
-          Clear filters
+          {{ t('clearFilters') }}
         </button>
       </div>
 
@@ -133,11 +133,11 @@
         >
           <div class="card-header">
             <div class="card-badge" :class="disease.category.toLowerCase().replace('-', '')">
-              {{ disease.category }}
+              {{ t(categoryLabelKey(disease.category)) }}
             </div>
             <div class="severity-indicator" :class="disease.severity.toLowerCase()">
               <span class="severity-dot"></span>
-              <span class="severity-text">{{ disease.severity }}</span>
+              <span class="severity-text">{{ t(severityLabelKey(disease.severity)) }}</span>
             </div>
           </div>
           
@@ -148,7 +148,7 @@
               <svg class="preview-icon" viewBox="0 0 24 24" fill="none">
                 <path d="M19 14l-7 7m0 0l-7-7m7 7V3" stroke="currentColor" stroke-width="1.5"/>
               </svg>
-              <span>Key Symptoms</span>
+              <span>{{ t('keySymptoms') }}</span>
             </div>
             <div class="symptoms-tags">
               <span v-for="(symptom, index) in disease.symptoms.slice(0, 2)" :key="index" class="symptom-tag">
@@ -162,7 +162,7 @@
 
           <div class="detection-rate">
             <div class="rate-label">
-              <span>AI Detection</span>
+              <span>{{ t('aiDetection') }}</span>
               <span class="rate-value">{{ getDetectionRate(disease) }}%</span>
             </div>
             <div class="rate-bar">
@@ -172,7 +172,7 @@
 
           <div class="card-footer">
             <span class="view-link">
-              View Details
+              {{ t('viewDetails') }}
               <svg viewBox="0 0 20 20" fill="none">
                 <path d="M4.16675 10H15.8334M15.8334 10L10.0001 4.16669M15.8334 10L10.0001 15.8334" 
                       stroke="currentColor" stroke-width="2"/>
@@ -190,10 +190,10 @@
             <path d="M12 8v5M12 16h.01" stroke="currentColor" stroke-width="2"/>
           </svg>
         </div>
-        <h3>No diseases found</h3>
-        <p>Try adjusting your search or filters</p>
+        <h3>{{ t('noDiseasesFound') }}</h3>
+        <p>{{ t('adjustSearchFilters') }}</p>
         <button class="reset-filters-btn" @click="resetFilters">
-          Reset Filters
+          {{ t('resetFilters') }}
         </button>
       </div>
 
@@ -206,10 +206,10 @@
           </svg>
         </div>
         <div class="banner-text">
-          <strong>Need a diagnosis?</strong> Upload images of affected plants for AI-powered analysis
+          <strong>{{ t('needDiagnosis') }}</strong> {{ t('uploadAffectedPlants') }}
         </div>
         <button class="banner-btn" @click="goToUpload">
-          Start Detection
+          {{ t('startDetection') }}
           <svg viewBox="0 0 20 20" fill="none">
             <path d="M4.16675 10H15.8334M15.8334 10L10.0001 4.16669M15.8334 10L10.0001 15.8334" 
                   stroke="currentColor" stroke-width="2"/>
@@ -223,18 +223,28 @@
 <script setup>
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { useLanguage } from '../store/language'
 
 const router = useRouter()
+const { t } = useLanguage()
 const searchQuery = ref('')
 const activeCategory = ref('all')
 
 const categories = [
-  { label: 'All', value: 'all' },
-  { label: 'Fungal', value: 'Fungal' },
-  { label: 'Bacterial', value: 'Bacterial' },
-  { label: 'Viral', value: 'Viral' },
-  { label: 'Soil', value: 'Soil-borne' }
+  { labelKey: 'categoryAll', value: 'all' },
+  { labelKey: 'categoryFungal', value: 'Fungal' },
+  { labelKey: 'categoryBacterial', value: 'Bacterial' },
+  { labelKey: 'categoryViral', value: 'Viral' },
+  { labelKey: 'categorySoil', value: 'Soil-borne' }
 ]
+
+const categoryLabelKey = category => ({
+  Fungal: 'categoryFungal',
+  Bacterial: 'categoryBacterial',
+  Viral: 'categoryViral',
+  'Soil-borne': 'soilBorne'
+}[category] || 'categoryAll')
+const severityLabelKey = severity => severity === 'High' ? 'severityHigh' : 'severityMedium'
 
 const diseases = [
   {

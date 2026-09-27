@@ -3,42 +3,42 @@
     <div class="settings-panel">
       <div class="settings-header">
         <div>
-          <h2>Display Settings</h2>
-          <p>Quick theme, language, font size, and layout controls.</p>
+          <h2>{{ t('displaySettings') }}</h2>
+          <p>{{ t('settingsSubtitle') }}</p>
         </div>
         <button class="close-btn" @click="close">×</button>
       </div>
 
       <section class="settings-section">
-        <h3>Theme</h3>
+        <h3>{{ t('theme') }}</h3>
         <div class="option-list">
           <label class="option-item">
             <input type="radio" value="light" v-model="themeMode" />
-            <span>Light mode</span>
+            <span>{{ t('lightMode') }}</span>
           </label>
           <label class="option-item">
             <input type="radio" value="dark" v-model="themeMode" />
-            <span>Dark mode</span>
+            <span>{{ t('darkMode') }}</span>
           </label>
         </div>
       </section>
 
       <section class="settings-section">
-        <h3>Font size</h3>
+        <h3>{{ t('fontSize') }}</h3>
         <div class="option-list">
           <label class="option-item">
             <input type="radio" value="normal" v-model="fontSize" />
-            <span>Normal</span>
+            <span>{{ t('normal') }}</span>
           </label>
           <label class="option-item">
             <input type="radio" value="large" v-model="fontSize" />
-            <span>Large (accessibility)</span>
+            <span>{{ t('largeAccessibility') }}</span>
           </label>
         </div>
       </section>
 
       <section class="settings-section">
-        <h3>Language</h3>
+        <h3>{{ t('language') }}</h3>
         <div class="option-list language-list">
           <button
             v-for="lang in Object.values(languages)"
@@ -53,21 +53,21 @@
       </section>
 
       <section class="settings-section">
-        <h3>Layout mode</h3>
+        <h3>{{ t('layoutMode') }}</h3>
         <div class="option-list">
           <label class="option-item">
             <input type="radio" value="full" v-model="layoutMode" />
-            <span>Full layout</span>
+            <span>{{ t('fullLayout') }}</span>
           </label>
           <label class="option-item">
             <input type="radio" value="compact" v-model="layoutMode" />
-            <span>Compact layout</span>
+            <span>{{ t('compactLayout') }}</span>
           </label>
         </div>
       </section>
 
       <div class="settings-actions">
-        <button class="primary-btn" @click="close">Close</button>
+        <button class="primary-btn" @click="close">{{ t('close') }}</button>
       </div>
     </div>
   </div>
@@ -78,7 +78,7 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { useLanguage } from '../store/language'
 
 const emit = defineEmits(['close'])
-const { currentLanguage, languages, setLanguage } = useLanguage()
+const { currentLanguage, languages, setLanguage, t } = useLanguage()
 
 const themeMode = ref('light')
 const fontSize = ref('normal')

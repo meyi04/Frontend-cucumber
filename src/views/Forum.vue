@@ -3,20 +3,20 @@
     <div class="forum-header">
       <div class="forum-header-content">
         <div>
-          <p class="eyebrow">Discussion Board</p>
-          <h1>Grower Community & Knowledge Center</h1>
+          <p class="eyebrow">{{ t('discussionBoard') }}</p>
+          <h1>{{ t('growerCommunityTitle') }}</h1>
           <p class="forum-description">
-            Share insights, ask questions, and collaborate with fellow growers in a focused, practical forum.
+            {{ t('forumDescription') }}
           </p>
         </div>
         <div class="forum-metrics">
           <div class="metric-card">
             <span class="metric-value">{{ posts.length }}</span>
-            <span class="metric-label">Recent posts</span>
+            <span class="metric-label">{{ t('recentPosts') }}</span>
           </div>
           <div class="metric-card">
             <span class="metric-value">+24%</span>
-            <span class="metric-label">Weekly engagement</span>
+            <span class="metric-label">{{ t('weeklyEngagement') }}</span>
           </div>
         </div>
       </div>
@@ -27,23 +27,23 @@
         <div class="forum-compose card">
           <div class="compose-header">
             <div>
-              <p class="eyebrow">New discussion</p>
-              <h2>Create a post</h2>
+              <p class="eyebrow">{{ t('newDiscussion') }}</p>
+              <h2>{{ t('createPost') }}</h2>
             </div>
-            <span class="compose-note">Keep your post concise and actionable.</span>
+            <span class="compose-note">{{ t('concisePost') }}</span>
           </div>
 
           <input
             v-model="newPostTitle"
             type="text"
             class="title-input"
-            placeholder="Discussion title"
+            :placeholder="t('discussionTitle')"
           />
 
           <textarea
             v-model="newPostText"
             rows="5"
-            placeholder="Share a problem, solution, or observation with the community."
+            :placeholder="t('shareWithCommunity')"
           ></textarea>
 
           <div v-if="previewImage" class="image-preview">
@@ -53,24 +53,24 @@
           <div class="compose-actions">
             <label class="upload-btn">
               <input type="file" accept="image/*" @change="handleImageSelect" />
-              Add photo
+              {{ t('addPhoto') }}
             </label>
             <button class="post-btn" @click="submitPost" :disabled="isPosting">
-              {{ isPosting ? 'Posting...' : 'Post Discussion' }}
+              {{ isPosting ? t('posting') : t('postDiscussion') }}
             </button>
           </div>
           <p v-if="statusMessage" class="status-message">{{ statusMessage }}</p>
         </div>
 
         <div class="forum-feed">
-          <div v-if="isLoading" class="card empty-state">Loading discussions...</div>
+          <div v-if="isLoading" class="card empty-state">{{ t('loadingDiscussions') }}</div>
           <div v-else-if="posts.length === 0" class="card empty-state">
-            No discussions yet. Start the conversation with a helpful post.
+            {{ t('noDiscussions') }}
           </div>
 
           <div v-else v-for="post in posts" :key="post.id" class="card post-card">
             <div class="post-top">
-              <span class="post-topic">Community</span>
+              <span class="post-topic">{{ t('community') }}</span>
               <span class="post-time">{{ formatDate(post.createdAt) }}</span>
             </div>
 
@@ -80,21 +80,21 @@
               <div class="post-author">
                 <div class="author-avatar">{{ getAuthorInitials(post.authorName) }}</div>
                 <div>
-                  <strong>{{ post.authorName || 'Community Member' }}</strong>
-                  <p>Posted in Grower Forum</p>
+                  <strong>{{ post.authorName || t('communityMember') }}</strong>
+                  <p>{{ t('postedGrowerForum') }}</p>
                 </div>
               </div>
                       <div class="post-actions">
                 <button class="action-btn" @click="toggleReply(post.id)">
-                  {{ activeReplyId === post.id ? 'Cancel' : 'Reply' }}
+                  {{ activeReplyId === post.id ? t('cancel') : t('reply') }}
                 </button>
-                <button class="action-btn secondary">Share</button>
+                <button class="action-btn secondary">{{ t('share') }}</button>
                 <button
                   v-if="post.replies?.length"
                   class="action-btn secondary"
                   @click="toggleReplies(post.id)"
                 >
-                  {{ showRepliesByPost[post.id] ? 'Hide replies' : `Show replies (${post.replies.length})` }}
+                  {{ showRepliesByPost[post.id] ? t('hideReplies') : t('showReplies', { count: post.replies.length }) }}
                 </button>
               </div>
             </div>
@@ -115,11 +115,11 @@
               <textarea
                 v-model="replyText"
                 rows="3"
-                placeholder="Write your reply..."
+                :placeholder="t('writeReply')"
               ></textarea>
               <div class="reply-controls">
                 <button class="post-btn" @click="submitReply(post.id)" :disabled="isPosting">
-                  {{ isPosting ? 'Posting reply...' : 'Submit reply' }}
+                  {{ isPosting ? t('postingReply') : t('submitReply') }}
                 </button>
                 <p class="reply-status" v-if="replyStatus">{{ replyStatus }}</p>
               </div>
@@ -132,21 +132,21 @@
 
       <aside class="forum-sidebar">
         <div class="sidebar-card">
-          <h3>Community guidelines</h3>
+          <h3>{{ t('communityGuidelines') }}</h3>
           <ul>
-            <li>Keep posts respectful and on-topic.</li>
-            <li>Share clear images or context.</li>
-            <li>Offer constructive, actionable advice.</li>
+            <li>{{ t('respectfulPosts') }}</li>
+            <li>{{ t('clearContext') }}</li>
+            <li>{{ t('actionableAdvice') }}</li>
           </ul>
         </div>
 
         <div class="sidebar-card">
-          <h3>Popular topics</h3>
+          <h3>{{ t('popularTopics') }}</h3>
           <div class="tag-list">
-            <span>Plant health</span>
-            <span>Pest control</span>
-            <span>Harvest tips</span>
-            <span>Model accuracy</span>
+            <span>{{ t('plantHealth') }}</span>
+            <span>{{ t('pestControl') }}</span>
+            <span>{{ t('harvestTips') }}</span>
+            <span>{{ t('modelAccuracy') }}</span>
           </div>
         </div>
       </aside>
@@ -157,6 +157,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useAuthStore } from '../store/auth'
+import { useLanguage } from '../store/language'
 import {
   auth,
   db,
@@ -176,6 +177,7 @@ import {
 } from '../firebase'
 
 const authStore = useAuthStore()
+const { t } = useLanguage()
 const newPostText = ref('')
 const newPostTitle = ref('')
 const selectedImage = ref(null)
@@ -198,7 +200,7 @@ const handleImageSelect = (event) => {
 
 const submitPost = async () => {
   if (!newPostText.value.trim() && !selectedImage.value) {
-    statusMessage.value = 'Please write something or add a photo.'
+    statusMessage.value = t('writeOrAddPhoto')
     return
   }
 
@@ -210,7 +212,7 @@ const submitPost = async () => {
 
     const user = auth.currentUser || authStore.user
     if (!user) {
-      statusMessage.value = 'Please sign in before posting to the forum.'
+      statusMessage.value = t('signInToPost')
       return
     }
 
@@ -236,11 +238,11 @@ const submitPost = async () => {
     newPostText.value = ''
     selectedImage.value = null
     previewImage.value = ''
-    statusMessage.value = 'Post published successfully.'
+    statusMessage.value = t('postPublished')
     await loadPosts()
   } catch (error) {
     console.error('Failed to publish forum post:', error)
-    statusMessage.value = 'Unable to post right now. Please try again.'
+    statusMessage.value = t('postFailed')
   } finally {
     isPosting.value = false
   }
@@ -282,7 +284,7 @@ const toggleReplies = (postId) => {
 
 const submitReply = async (postId) => {
   if (!replyText.value.trim()) {
-    replyStatus.value = 'Please enter a reply before submitting.'
+    replyStatus.value = t('enterReply')
     return
   }
 
@@ -293,7 +295,7 @@ const submitReply = async (postId) => {
     await authStore.initializeAuth()
     const user = auth.currentUser || authStore.user
     if (!user) {
-      replyStatus.value = 'Please sign in before replying.'
+      replyStatus.value = t('signInToReply')
       return
     }
 
@@ -311,11 +313,11 @@ const submitReply = async (postId) => {
 
     replyText.value = ''
     activeReplyId.value = null
-    replyStatus.value = 'Reply posted successfully.'
+    replyStatus.value = t('replyPublished')
     await loadPosts()
   } catch (error) {
     console.error('Failed to post reply:', error)
-    replyStatus.value = 'Unable to submit reply. Please try again.'
+    replyStatus.value = t('replyFailed')
   } finally {
     isPosting.value = false
   }
@@ -328,7 +330,7 @@ const getPostTitle = (post) => {
 
   const text = post.text || ''
   if (text.length <= 72) {
-    return text || 'Untitled discussion'
+    return text || t('untitledDiscussion')
   }
   return `${text.slice(0, 72).trim()}…`
 }
@@ -344,9 +346,9 @@ const getAuthorInitials = (name) => {
 }
 
 const formatDate = (value) => {
-  if (!value) return 'Just now'
+  if (!value) return t('justNow')
   const date = value?.toDate ? value.toDate() : new Date(value)
-  return date.toLocaleString()
+  return date.toLocaleString(t('locale') || 'en-US')
 }
 
 onMounted(() => {

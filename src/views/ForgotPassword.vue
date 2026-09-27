@@ -1,5 +1,6 @@
 <template>
   <div class="login-container">
+    <LanguageSwitcher style="position: fixed; top: 16px; right: 16px; z-index: 20" />
     <!-- Background Pattern -->
     <div class="background-pattern"></div>
     
@@ -17,13 +18,13 @@
           </div>
           <div class="logo-text">
             <h1>Cu-Scan</h1>
-            <p class="logo-subtitle">Intelligent Plant Analysis</p>
+            <p class="logo-subtitle">{{ t('brandSubtitle') }}</p>
           </div>
         </div>
         
         <div class="header-content">
-          <h2 class="login-title">Reset Your Password</h2>
-          <p class="login-subtitle">Enter your email to receive reset instructions</p>
+          <h2 class="login-title">{{ t('forgotHeroTitle') }}</h2>
+          <p class="login-subtitle">{{ t('forgotHeroDescription') }}</p>
         </div>
       </div>
 
@@ -36,7 +37,7 @@
               <path d="M4 4H20C21.1 4 22 4.9 22 6V18C22 19.1 21.1 20 20 20H4C2.9 20 2 19.1 2 18V6C2 4.9 2.9 4 4 4Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
               <path d="M22 6L12 13L2 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
-            Email Address
+            {{ t('emailAddress') }}
           </label>
           <div class="input-wrapper">
             <input
@@ -66,8 +67,8 @@
             <path d="M8 12L11 15L16 9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
           <div class="success-content">
-            <p class="success-title">Check your email!</p>
-            <p class="success-text">We've sent password reset instructions to <strong>{{ email }}</strong></p>
+            <p class="success-title">{{ t('checkYourEmailBang') }}</p>
+            <p class="success-text">{{ t('resetInstructionsSent') }} <strong>{{ email }}</strong></p>
           </div>
         </div>
 
@@ -89,11 +90,11 @@
               <path d="M17 9L12 4L7 9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
               <path d="M12 4V15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
-            Send Reset Link
+            {{ t('sendResetLink') }}
           </span>
           <span v-else>
             <div class="spinner"></div>
-            Sending...
+            {{ t('sending') }}
           </span>
         </button>
 
@@ -104,7 +105,7 @@
               <path d="M19 12H5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
               <path d="M12 19L5 12L12 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
-            Back to Login
+            {{ t('backToLogin') }}
           </router-link>
         </div>
       </form>
@@ -116,6 +117,10 @@
 import { ref, reactive } from 'vue';
 import { sendPasswordResetEmail } from 'firebase/auth';
 import { auth } from '../firebase';
+import { useLanguage } from '../store/language'
+import LanguageSwitcher from '../components/LanguageSwitcher.vue'
+
+const { t } = useLanguage()
 
 const email = ref('');
 const isSubmitting = ref(false);
@@ -134,10 +139,10 @@ const validateForm = () => {
   // Email validation
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!email.value) {
-    errors.email = 'Email is required';
+    errors.email = t('emailRequired');
     isValid = false;
   } else if (!emailRegex.test(email.value)) {
-    errors.email = 'Please enter a valid email address';
+    errors.email = t('validEmailRequired');
     isValid = false;
   }
 
@@ -164,8 +169,8 @@ const resetPassword = async () => {
     success.value = true;
     // Clear form after successful submission
     email.value = '';
-  } catch (err) {
-    error.value = err.message;
+  } catch {
+    error.value = t('operationFailed');
     success.value = false;
   } finally {
     isSubmitting.value = false;

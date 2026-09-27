@@ -47,13 +47,19 @@
           ></textarea>
 
           <div v-if="previewImage" class="image-preview">
-            <img :src="previewImage" alt="Selected preview" />
+            <img :src="previewImage" :alt="selectedImage?.name || t('selectedPhoto')" />
+            <div class="image-preview-footer">
+              <span>{{ selectedImage?.name }}</span>
+              <button type="button" class="remove-photo-btn" @click="removeSelectedImage" :disabled="isPosting">
+                {{ t('removePhoto') }}
+              </button>
+            </div>
           </div>
 
           <div class="compose-actions">
             <label class="upload-btn">
-              <input type="file" accept="image/*" @change="handleImageSelect" />
-              {{ t('addPhoto') }}
+              <input ref="imageInput" type="file" accept="image/*" @change="handleImageSelect" :disabled="isPosting" />
+              {{ selectedImage ? t('replacePhoto') : t('addPhoto') }}
             </label>
             <button class="post-btn" @click="submitPost" :disabled="isPosting">
               {{ isPosting ? t('posting') : t('postDiscussion') }}
@@ -155,16 +161,12 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useAuthStore } from '../store/auth'
 import { useLanguage } from '../store/language'
 import {
   auth,
   db,
-  storage,
-  storageRef,
-  uploadBytes,
-  getDownloadURL,
   collection,
   addDoc,
   getDocs,
@@ -182,6 +184,7 @@ const newPostText = ref('')
 const newPostTitle = ref('')
 const selectedImage = ref(null)
 const previewImage = ref('')
+const imageInput = ref(null)
 const posts = ref([])
 const activeReplyId = ref(null)
 const showRepliesByPost = ref({})
@@ -194,8 +197,61 @@ const statusMessage = ref('')
 const handleImageSelect = (event) => {
   const file = event.target.files?.[0]
   if (!file) return
+
+  event.target.value = ''
+  if (!file.type.startsWith('image/')) {
+    statusMessage.value = t('invalidPhoto')
+    return
+  }
+  if (file.size > 10 * 1024 * 1024) {
+    statusMessage.value = t('photoTooLarge')
+    return
+  }
+
+  if (previewImage.value) URL.revokeObjectURL(previewImage.value)
   selectedImage.value = file
   previewImage.value = URL.createObjectURL(file)
+  statusMessage.value = ''
+}
+
+const removeSelectedImage = () => {
+  if (previewImage.value) URL.revokeObjectURL(previewImage.value)
+  selectedImage.value = null
+  previewImage.value = ''
+  if (imageInput.value) imageInput.value.value = ''
+}
+
+const compressImageForFirestore = async (file) => {
+  const bitmap = await createImageBitmap(file)
+  try {
+    const maxDimension = Math.max(bitmap.width, bitmap.height)
+    let scale = Math.min(1, 1024 / maxDimension)
+    const canvas = document.createElement('canvas')
+    const context = canvas.getContext('2d')
+    if (!context) throw new Error(t('photoCompressionFailed'))
+
+    for (let attempt = 0; attempt < 12; attempt += 1) {
+      if (attempt > 0 && attempt % 4 === 0) scale *= 0.8
+      canvas.width = Math.max(1, Math.round(bitmap.width * scale))
+      canvas.height = Math.max(1, Math.round(bitmap.height * scale))
+      context.drawImage(bitmap, 0, 0, canvas.width, canvas.height)
+
+      const quality = [0.76, 0.66, 0.56, 0.46][attempt % 4]
+      const compressedBlob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', quality))
+      if (compressedBlob && compressedBlob.size <= 600 * 1024) {
+        return await new Promise((resolve, reject) => {
+          const reader = new FileReader()
+          reader.onload = () => resolve(reader.result)
+          reader.onerror = () => reject(reader.error)
+          reader.readAsDataURL(compressedBlob)
+        })
+      }
+    }
+
+    throw new Error(t('photoCompressionFailed'))
+  } finally {
+    bitmap.close?.()
+  }
 }
 
 const submitPost = async () => {
@@ -206,6 +262,7 @@ const submitPost = async () => {
 
   isPosting.value = true
   statusMessage.value = ''
+  let isPreparingPhoto = false
 
   try {
     await authStore.initializeAuth()
@@ -219,16 +276,17 @@ const submitPost = async () => {
     let imageUrl = ''
 
     if (selectedImage.value) {
-      const safeFileName = selectedImage.value.name.replace(/\s+/g, '_')
-      const fileRef = storageRef(storage, `forum/${Date.now()}_${safeFileName}`)
-      await uploadBytes(fileRef, selectedImage.value)
-      imageUrl = await getDownloadURL(fileRef)
+      isPreparingPhoto = true
+      imageUrl = await compressImageForFirestore(selectedImage.value)
+      isPreparingPhoto = false
     }
 
     await addDoc(collection(db, 'forumPosts'), {
       title: newPostTitle.value.trim() || '',
       text: newPostText.value.trim(),
       imageUrl,
+      imageName: selectedImage.value?.name || '',
+      imageSize: selectedImage.value?.size || 0,
       authorId: user.uid,
       authorName: user.displayName || user.email?.split('@')[0] || 'Community Member',
       createdAt: serverTimestamp()
@@ -236,17 +294,20 @@ const submitPost = async () => {
 
     newPostTitle.value = ''
     newPostText.value = ''
-    selectedImage.value = null
-    previewImage.value = ''
+    removeSelectedImage()
     statusMessage.value = t('postPublished')
     await loadPosts()
   } catch (error) {
     console.error('Failed to publish forum post:', error)
-    statusMessage.value = t('postFailed')
+    statusMessage.value = t(isPreparingPhoto ? 'photoCompressionFailed' : 'postFailed')
   } finally {
     isPosting.value = false
   }
 }
+
+onUnmounted(() => {
+  if (previewImage.value) URL.revokeObjectURL(previewImage.value)
+})
 
 const loadPosts = async () => {
   try {
@@ -544,6 +605,36 @@ onMounted(() => {
   object-fit: cover;
   border-radius: 16px;
   margin-top: 18px;
+}
+
+.image-preview-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-top: 8px;
+  color: #64748b;
+  font-size: 0.875rem;
+}
+
+.image-preview-footer span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.remove-photo-btn {
+  flex: 0 0 auto;
+  padding: 6px 10px;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  color: #b91c1c;
+  background: #fff;
+  cursor: pointer;
+}
+
+.remove-photo-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
 }
 
 .post-card {

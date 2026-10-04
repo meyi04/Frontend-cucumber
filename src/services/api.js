@@ -1,5 +1,5 @@
 // API service for cucumber disease detection
-const API_BASE_URL = 'http://143.198.90.26/api';
+import { API_BASE_URL } from '../config/api'
 
 export const apiService = {
   // Upload and process image

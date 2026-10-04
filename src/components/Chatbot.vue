@@ -11,6 +11,7 @@
 import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { marked } from 'marked'
 import { useLanguage } from '../store/language'
+import { API_BASE_URL } from '../config/api'
 marked.setOptions({ breaks: true, gfm: true })
 const { t, currentLanguage } = useLanguage()
 const isOpen = ref(false); const userInput = ref(''); const messages = ref([]); const isLoading = ref(false); const error = ref(''); const hasUnreadMessages = ref(false); const messagesContainer = ref(null); const textInput = ref(null)
@@ -34,7 +35,7 @@ const sendMessage = async () => {
     const history = messages.value
       .filter(message => !message.loading)
       .map(message => ({ sender: message.sender, text: message.text, timestamp: message.timestamp }))
-    const response = await fetch('http://143.198.90.26/api/chat', {
+    const response = await fetch(`${API_BASE_URL}/chat`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ message: text, history, language: currentLanguage.value })

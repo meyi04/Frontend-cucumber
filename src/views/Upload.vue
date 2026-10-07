@@ -63,7 +63,7 @@
           <button 
             class="tab-btn" 
             :class="{ 'active': activeTab === 'upload' }"
-            @click="activeTab = 'upload'"
+            @click="openUploadTab"
           >
             <svg class="tab-icon" viewBox="0 0 24 24" fill="none">
               <path d="M21 16V20C21 20.5304 20.7893 21.0391 20.4142 21.4142C20.0391 21.7893 19.5304 22 19 22H5C4.46957 22 3.96086 21.7893 3.58579 21.4142C3.21071 21.0391 3 20.5304 3 20V16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
@@ -143,6 +143,10 @@
         <!-- Camera Tab -->
         <div v-if="activeTab === 'camera'" class="camera-area">
           <div class="camera-container">
+            <p v-if="cameraError" class="camera-error" role="alert">
+              {{ cameraError }}
+            </p>
+
             <!-- Camera Preview -->
             <div v-if="!capturedImage" class="camera-preview">
               <video
@@ -412,7 +416,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onUnmounted, onMounted } from 'vue'
+import { ref, computed, nextTick, onUnmounted, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useLanguage } from '../store/language'
 import { API_BASE_URL, BACKEND_BASE_URL } from '../config/api'
@@ -438,6 +442,8 @@ const selectedFile = ref(null)
 const imagePreview = ref('')
 const isCameraReady = ref(false)
 const isCameraFlipped = ref(false)
+const cameraError = ref('')
+const cameraStream = ref(null)
 const capturedImage = ref('')
 const isProcessing = ref(false)
 const hasResults = ref(false)
@@ -546,6 +552,15 @@ const formatFileSize = (bytes) => {
 
 // Camera Methods
 const initializeCamera = async () => {
+  stopCamera()
+  cameraError.value = ''
+  isCameraReady.value = false
+
+  if (!window.isSecureContext || !navigator.mediaDevices?.getUserMedia) {
+    cameraError.value = t('cameraInsecureContext')
+    return
+  }
+
   try {
     const stream = await navigator.mediaDevices.getUserMedia({ 
       video: { 
@@ -554,14 +569,38 @@ const initializeCamera = async () => {
         height: { ideal: 720 }
       } 
     })
+
+    await nextTick()
     if (videoElement.value) {
+      cameraStream.value = stream
       videoElement.value.srcObject = stream
       isCameraReady.value = true
+    } else {
+      stream.getTracks().forEach(track => track.stop())
     }
   } catch (error) {
     console.error('Camera error:', error)
-    alert(t('cameraAccessError'))
+    const errors = {
+      NotAllowedError: 'cameraPermissionDenied',
+      SecurityError: 'cameraPermissionDenied',
+      NotFoundError: 'cameraNotFound',
+      NotReadableError: 'cameraUnavailable',
+      OverconstrainedError: 'cameraUnavailable'
+    }
+    const errorName = error && typeof error === 'object' ? error.name : undefined
+    cameraError.value = t(errors[errorName] || 'cameraAccessError')
   }
+}
+
+const stopCamera = () => {
+  cameraStream.value?.getTracks().forEach(track => track.stop())
+  cameraStream.value = null
+  isCameraReady.value = false
+}
+
+const openUploadTab = () => {
+  stopCamera()
+  activeTab.value = 'upload'
 }
 
 const captureImage = () => {
@@ -580,10 +619,7 @@ const captureImage = () => {
   pestScanError.value = null
   
   // Stop camera stream
-  const stream = videoElement.value.srcObject
-  if (stream) {
-    stream.getTracks().forEach(track => track.stop())
-  }
+  stopCamera()
 }
 
 const useCapturedImage = () => {
@@ -1319,10 +1355,7 @@ onMounted(() => {
 
 // Cleanup
 onUnmounted(() => {
-  if (videoElement.value && videoElement.value.srcObject) {
-    const stream = videoElement.value.srcObject
-    stream.getTracks().forEach(track => track.stop())
-  }
+  stopCamera()
 })
 </script>
 
@@ -1829,6 +1862,14 @@ onUnmounted(() => {
   overflow: hidden;
   background: #000;
   margin-bottom: 16px;
+}
+
+.camera-error {
+  margin: 0;
+  padding: 12px 16px;
+  background: #fef2f2;
+  color: #991b1b;
+  font-size: 0.9rem;
 }
 
 .camera-preview,

@@ -528,6 +528,26 @@
           </fieldset>
           <template v-else>
             <fieldset class="report-options-group">
+              <legend>{{ t('reportTimePeriod') }}</legend>
+              <select v-model="reportOptions.timePeriod" class="report-period-select">
+                <option value="all">{{ t('reportPeriodAll') }}</option>
+                <option value="today">{{ t('today') }}</option>
+                <option value="week">{{ t('thisWeek') }}</option>
+                <option value="month">{{ t('thisMonth') }}</option>
+                <option value="custom">{{ t('reportPeriodCustom') }}</option>
+              </select>
+              <div v-if="reportOptions.timePeriod === 'custom'" class="report-date-fields">
+                <label>
+                  {{ t('reportFrom') }}
+                  <input v-model="reportOptions.fromDate" type="date" />
+                </label>
+                <label>
+                  {{ t('reportTo') }}
+                  <input v-model="reportOptions.toDate" type="date" />
+                </label>
+              </div>
+            </fieldset>
+            <fieldset class="report-options-group">
               <legend>{{ t('reportSections') }}</legend>
               <label class="report-option">
                 <input v-model="reportOptions.includeSummary" type="checkbox" />
@@ -600,7 +620,10 @@ const reportOptions = reactive({
   includeStatus: true,
   includeDisease: true,
   includeConfidence: true,
-  includeDate: true
+  includeDate: true,
+  timePeriod: 'all',
+  fromDate: '',
+  toDate: ''
 })
 const singleReportOptions = [
   { key: 'includeImage', labelKey: 'reportIncludeImage' },
@@ -665,8 +688,40 @@ const generateSelectedReport = async () => {
   if (mode === 'single') {
     await generateSingleReport(items[0], { ...reportOptions })
   } else {
-    await generateBatchReport(items, { ...reportOptions })
+    const reportItems = filterReportItemsByPeriod(items, reportOptions)
+    if (!reportItems.length) {
+      alert(t('noReportsInPeriod'))
+      showReportOptions.value = true
+      return
+    }
+    await generateBatchReport(reportItems, { ...reportOptions })
   }
+}
+
+const filterReportItemsByPeriod = (items, options) => {
+  if (options.timePeriod === 'all') return items
+  const now = new Date()
+  now.setHours(23, 59, 59, 999)
+  let start = new Date(now)
+  if (options.timePeriod === 'today') {
+    start.setHours(0, 0, 0, 0)
+  } else if (options.timePeriod === 'week') {
+    start.setDate(start.getDate() - 6)
+    start.setHours(0, 0, 0, 0)
+  } else if (options.timePeriod === 'month') {
+    start = new Date(now.getFullYear(), now.getMonth(), 1)
+  } else if (options.timePeriod === 'custom') {
+    start = options.fromDate ? new Date(`${options.fromDate}T00:00:00`) : new Date(0)
+    const end = options.toDate ? new Date(`${options.toDate}T23:59:59.999`) : now
+    return items.filter(item => {
+      const date = new Date(item.uploadedAt)
+      return date >= start && date <= end
+    })
+  }
+  return items.filter(item => {
+    const date = new Date(item.uploadedAt)
+    return date >= start && date <= now
+  })
 }
 
 // Computed properties

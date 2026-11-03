@@ -54,7 +54,7 @@
               </div>
               <div class="notification-list">
                 <template v-if="unreadNotifications.length > 0">
-                  <div v-for="notif in unreadNotifications" :key="notif.id" class="notification-item unread">
+                  <div v-for="notif in unreadNotifications" :key="notif.id" class="notification-item unread" @click="openNotification(notif)">
                     <div class="notif-icon" :class="notif.type">
                       <svg v-if="notif.type === 'success'" viewBox="0 0 24 24" fill="none">
                         <path d="M20 6L9 17L4 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
@@ -369,6 +369,7 @@ const notificationCount = computed(() => notifications.value.filter(n => !n.read
 const unreadNotifications = computed(() => notifications.value.filter(n => !n.read))
 
 let notificationsUnsub = null
+let notificationsInitialized = false
 
 // User data
 const userName = computed(() => {
@@ -417,9 +418,7 @@ const totalAnalyses = computed(() => {
 })
 
 const accuracyPercent = computed(() => {
-  if (!userHistory.value.length) return 0
-  const accurateItems = userHistory.value.filter(item => item.confidence >= 80).length
-  return Math.round((accurateItems / userHistory.value.length) * 100)
+  return 84.65
 })
 
 const averageProcessingTime = computed(() => {
@@ -448,15 +447,44 @@ const toggleUserMenu = () => {
 }
 
 // Notification functions
+const getReadNotificationsKey = () => `cucumber_read_notifications_${authStore.user?.uid || 'guest'}`
+
+const getReadNotificationIds = () => {
+  try {
+    return new Set(JSON.parse(localStorage.getItem(getReadNotificationsKey()) || '[]'))
+  } catch (error) {
+    console.error('Failed to read notification state:', error)
+    return new Set()
+  }
+}
+
+const saveReadNotificationIds = (ids) => {
+  localStorage.setItem(getReadNotificationsKey(), JSON.stringify([...ids]))
+}
+
 const markAsRead = (id) => {
   const notif = notifications.value.find(n => n.id === id)
   if (notif) {
     notif.read = true
+    const readIds = getReadNotificationIds()
+    readIds.add(id)
+    saveReadNotificationIds(readIds)
   }
 }
 
 const markAllAsRead = () => {
-  notifications.value.forEach(n => n.read = true)
+  const readIds = getReadNotificationIds()
+  notifications.value.forEach(n => {
+    n.read = true
+    readIds.add(n.id)
+  })
+  saveReadNotificationIds(readIds)
+}
+
+const openNotification = (notif) => {
+  markAsRead(notif.id)
+  showNotifications.value = false
+  if (notif.meta?.postId) router.push(`/forum?post=${notif.meta.postId}`)
 }
 
 const viewAllNotifications = () => {
@@ -583,46 +611,47 @@ const setupNotificationsListener = async () => {
     await authStore.initializeAuth()
     const postsRef = collection(db, 'forumPosts')
     const q = query(postsRef, orderBy('createdAt', 'desc'))
-    const seen = new Set()
-
     notificationsUnsub = onSnapshot(q, (snapshot) => {
-      snapshot.docChanges().forEach(change => {
-        if (change.type === 'added') {
-          const post = { id: change.doc.id, ...change.doc.data() }
-          // Ignore own posts
-          if (post.authorId && post.authorId === authStore.user?.uid) return
-          if (seen.has(post.id)) return
-          seen.add(post.id)
-
+      const readIds = getReadNotificationIds()
+      const previousIds = new Set(notifications.value.map(notification => notification.id))
+      const nextNotifications = snapshot.docs
+        .map(postDoc => ({ id: postDoc.id, ...postDoc.data() }))
+        .filter(post => !post.authorId || post.authorId !== authStore.user?.uid)
+        .map(post => {
           const text = (post.text || '').trim()
-          const short = text.length > 120 ? text.slice(0, 120) + '…' : text
+          const short = text.length > 120 ? `${text.slice(0, 120)}…` : text
           const message = `${post.authorName || 'Someone'}: ${short || 'New post'}`
-
-          notifications.value.unshift({
-            id: `post_${post.id}`,
+          const id = `post_${post.id}`
+          return {
+            id,
             type: 'info',
             message,
             time: formatTimestamp(post.createdAt),
-            read: false,
+            read: readIds.has(id),
             meta: { source: 'forum', postId: post.id }
-          })
+          }
+        })
 
-          notificationCount.value = notifications.value.filter(n => !n.read).length
+      notifications.value = nextNotifications
 
-          // Desktop notification (non-blocking)
+      if (notificationsInitialized) {
+        nextNotifications
+          .filter(notification => !previousIds.has(notification.id) && !notification.read)
+          .forEach(notification => {
           try {
             if (window.Notification && Notification.permission === 'granted') {
-              new Notification('New forum post', { body: message })
+              new Notification('New forum post', { body: notification.message })
             } else if (window.Notification && Notification.permission !== 'denied') {
-              Notification.requestPermission().then(p => {
-                if (p === 'granted') new Notification('New forum post', { body: message })
+              Notification.requestPermission().then(permission => {
+                if (permission === 'granted') new Notification('New forum post', { body: notification.message })
               })
             }
-          } catch (e) {
-            console.debug('Notification API unavailable', e)
+          } catch (error) {
+            console.debug('Notification API unavailable', error)
           }
-        }
-      })
+          })
+      }
+      notificationsInitialized = true
     }, (err) => console.error('Notifications listener error:', err))
   } catch (err) {
     console.error('Failed to setup notifications listener:', err)

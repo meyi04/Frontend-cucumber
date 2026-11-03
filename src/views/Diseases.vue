@@ -12,15 +12,15 @@
       <div class="diseases-header">
         <div class="header-left">
           <div class="header-badge">
-            <span class="badge-text">{{ t('diseaseReference') }}</span>
+            <span class="badge-text">{{ t('plantHealthReference') }}</span>
             <div class="badge-glow"></div>
           </div>
           <h1 class="page-title">
-            <span class="title-line">{{ t('cucumberDisease') }}</span>
+            <span class="title-line">{{ t('cucumberPestDisease') }}</span>
             <span class="title-line gradient-text">{{ t('knowledgeBase') }}</span>
           </h1>
           <p class="page-subtitle">
-            {{ t('diseaseGuideSubtitle') }}
+            {{ t('pestDiseaseGuideSubtitle') }}
           </p>
         </div>
 
@@ -36,7 +36,7 @@
                 v-model="searchQuery"
                 type="text"
                 class="search-input"
-                :placeholder="t('searchDiseases')"
+                :placeholder="t('searchPestsDiseases')"
               />
               <div v-if="searchQuery" class="search-clear" @click="clearSearch">
                 <svg viewBox="0 0 24 24" fill="none">
@@ -72,7 +72,7 @@
           </div>
           <div class="stat-content">
             <div class="stat-value">{{ diseases.length }}</div>
-            <div class="stat-label">{{ t('totalDiseases') }}</div>
+            <div class="stat-label">{{ t('totalGuideEntries') }}</div>
           </div>
         </div>
         <div class="stat-item">
@@ -95,8 +95,8 @@
             </svg>
           </div>
           <div class="stat-content">
-            <div class="stat-value">{{ fungalCount }}</div>
-            <div class="stat-label">{{ t('fungal') }}</div>
+            <div class="stat-value">{{ pestCount }}</div>
+            <div class="stat-label">{{ t('pests') }}</div>
           </div>
         </div>
         <div class="stat-item">
@@ -108,15 +108,15 @@
             </svg>
           </div>
           <div class="stat-content">
-            <div class="stat-value">{{ bacterialCount }}</div>
-            <div class="stat-label">{{ t('bacterial') }}</div>
+            <div class="stat-value">{{ diseaseCount }}</div>
+            <div class="stat-label">{{ t('diseases') }}</div>
           </div>
         </div>
       </div>
 
       <!-- Search Results Info -->
       <div class="results-info">
-        <span>{{ t('showingDiseases', { shown: filteredDiseases.length, total: diseases.length }) }}</span>
+        <span>{{ t('showingGuideEntries', { shown: filteredDiseases.length, total: diseases.length }) }}</span>
         <button v-if="hasActiveFilters" @click="resetFilters" class="reset-link">
           {{ t('clearFilters') }}
         </button>
@@ -190,7 +190,7 @@
             <path d="M12 8v5M12 16h.01" stroke="currentColor" stroke-width="2"/>
           </svg>
         </div>
-        <h3>{{ t('noDiseasesFound') }}</h3>
+        <h3>{{ t('noPestsDiseasesFound') }}</h3>
         <p>{{ t('adjustSearchFilters') }}</p>
         <button class="reset-filters-btn" @click="resetFilters">
           {{ t('resetFilters') }}
@@ -232,6 +232,7 @@ const activeCategory = ref('all')
 
 const categories = [
   { labelKey: 'categoryAll', value: 'all' },
+  { labelKey: 'categoryPests', value: 'Pest' },
   { labelKey: 'categoryFungal', value: 'Fungal' },
   { labelKey: 'categoryBacterial', value: 'Bacterial' },
   { labelKey: 'categoryViral', value: 'Viral' },
@@ -242,7 +243,8 @@ const categoryLabelKey = category => ({
   Fungal: 'categoryFungal',
   Bacterial: 'categoryBacterial',
   Viral: 'categoryViral',
-  'Soil-borne': 'soilBorne'
+  'Soil-borne': 'soilBorne',
+  Pest: 'categoryPests'
 }[category] || 'categoryAll')
 const severityLabelKey = severity => severity === 'High' ? 'severityHigh' : 'severityMedium'
 
@@ -324,6 +326,177 @@ const diseases = [
     ],
     causes: ['Aphid transmission', 'Infected weeds', 'Mechanical spread'],
     actions: ['Remove infected plants', 'Control aphids', 'Manage weeds']
+  },
+  {
+    id: 'gummy_stem_blight',
+    name: 'Gummy Stem Blight',
+    category: 'Fungal',
+    severity: 'High',
+    symptoms: ['Brown stem cankers', 'Gummy amber ooze', 'Leaf edge browning'],
+    causes: ['Didymella bryoniae', 'Infected seed', 'Wet foliage'],
+    actions: ['Remove infected vines', 'Improve airflow', 'Use clean seed and labelled fungicide']
+  },
+  {
+    id: 'fusarium_wilt',
+    name: 'Fusarium Wilt',
+    category: 'Soil-borne',
+    severity: 'High',
+    symptoms: ['One-sided yellowing', 'Vascular browning', 'Progressive wilting'],
+    causes: ['Fusarium oxysporum', 'Infested soil', 'Root injury'],
+    actions: ['Remove infected plants', 'Rotate crops', 'Use resistant varieties']
+  },
+  {
+    id: 'phytophthora_blight',
+    name: 'Phytophthora Blight',
+    category: 'Soil-borne',
+    severity: 'High',
+    symptoms: ['Water-soaked lesions', 'Fruit collapse', 'Dark root rot'],
+    causes: ['Phytophthora capsici', 'Poor drainage', 'Flooded soil'],
+    actions: ['Improve drainage', 'Remove infected fruit', 'Avoid moving wet soil']
+  },
+  {
+    id: 'damping_off',
+    name: 'Damping-off',
+    category: 'Soil-borne',
+    severity: 'Medium',
+    symptoms: ['Seedling stem collapse', 'Brown roots', 'Poor emergence'],
+    causes: ['Pythium or Rhizoctonia', 'Overwatering', 'Contaminated media'],
+    actions: ['Use sterile media', 'Reduce moisture', 'Improve drainage']
+  },
+  {
+    id: 'calicos',
+    name: 'Cucumber Calico',
+    category: 'Viral',
+    severity: 'Medium',
+    symptoms: ['Mottled yellow leaves', 'Leaf distortion', 'Stunted vines'],
+    causes: ['Virus infection', 'Aphid transmission', 'Infected weeds'],
+    actions: ['Remove infected plants', 'Control aphids', 'Disinfect tools']
+  },
+  {
+    id: 'aphids',
+    name: 'Aphids',
+    category: 'Pest',
+    severity: 'Medium',
+    symptoms: ['Clusters on new growth', 'Curled leaves', 'Sticky honeydew'],
+    causes: ['Winged aphid adults', 'Weeds', 'Excess soft growth'],
+    actions: ['Rinse leaf undersides', 'Protect beneficial insects', 'Use labelled insecticidal soap']
+  },
+  {
+    id: 'whiteflies',
+    name: 'Whiteflies',
+    category: 'Pest',
+    severity: 'Medium',
+    symptoms: ['Tiny white insects', 'Yellowing leaves', 'Honeydew and sooty mold'],
+    causes: ['Whitefly adults and nymphs', 'Weedy hosts', 'Warm conditions'],
+    actions: ['Use yellow sticky traps', 'Rinse leaves', 'Use labelled soap or oil']
+  },
+  {
+    id: 'thrips',
+    name: 'Thrips',
+    category: 'Pest',
+    severity: 'Medium',
+    symptoms: ['Silvery leaf scars', 'Black specks', 'Distorted flowers'],
+    causes: ['Thrips feeding', 'Weeds', 'Dry conditions'],
+    actions: ['Use sticky traps', 'Remove weeds', 'Protect predatory insects']
+  },
+  {
+    id: 'spider_mites',
+    name: 'Spider Mites',
+    category: 'Pest',
+    severity: 'Medium',
+    symptoms: ['Fine webbing', 'Pale stippling', 'Bronzed leaves'],
+    causes: ['Tetranychus mites', 'Hot dry weather', 'Dusty plants'],
+    actions: ['Rinse leaf undersides', 'Reduce dusty conditions', 'Use labelled miticide if needed']
+  },
+  {
+    id: 'cucumber_beetles',
+    name: 'Cucumber Beetles',
+    category: 'Pest',
+    severity: 'High',
+    symptoms: ['Feeding holes', 'Striped or spotted beetles', 'Sudden wilt risk'],
+    causes: ['Adult cucumber beetles', 'Weedy shelter', 'Plant debris'],
+    actions: ['Use row covers', 'Hand-pick beetles', 'Monitor and protect seedlings']
+  },
+  {
+    id: 'cutworms',
+    name: 'Cutworms',
+    category: 'Pest',
+    severity: 'Medium',
+    symptoms: ['Seedlings cut at soil line', 'Missing young plants', 'Chewed stems'],
+    causes: ['Night-feeding caterpillars', 'Weeds and debris', 'Unprotected seedlings'],
+    actions: ['Use seedling collars', 'Inspect after dark', 'Clear weeds and debris']
+  },
+  {
+    id: 'leafminers',
+    name: 'Leafminers',
+    category: 'Pest',
+    severity: 'Low',
+    symptoms: ['Winding tunnels in leaves', 'Blotchy mines', 'Premature leaf drop'],
+    causes: ['Leafminer fly larvae', 'Volunteer plants', 'Weeds'],
+    actions: ['Remove mined leaves', 'Control weeds', 'Protect parasitic wasps']
+  },
+  {
+    id: 'slugs_snails',
+    name: 'Slugs and Snails',
+    category: 'Pest',
+    severity: 'Medium',
+    symptoms: ['Irregular holes', 'Slimy trails', 'Night feeding'],
+    causes: ['Moist hiding places', 'Plant debris', 'Overwatering'],
+    actions: ['Remove hiding places', 'Hand-pick at night', 'Use barriers or labelled bait']
+  },
+  {
+    id: 'alternaria_leaf_blight',
+    name: 'Alternaria Leaf Blight',
+    category: 'Fungal',
+    severity: 'Medium',
+    symptoms: ['Concentric brown rings', 'Leaf yellowing', 'Premature leaf drop'],
+    causes: ['Alternaria cucumerina', 'Wet foliage', 'Infected debris'],
+    actions: ['Remove infected leaves', 'Rotate crops', 'Use labelled fungicide']
+  },
+  {
+    id: 'cucurbit_scab',
+    name: 'Cucurbit Scab',
+    category: 'Fungal',
+    severity: 'Medium',
+    symptoms: ['Olive leaf spots', 'Sunken fruit lesions', 'Cracked stems'],
+    causes: ['Cladosporium cucumerinum', 'Cool wet weather', 'Infected debris'],
+    actions: ['Use clean seed', 'Improve airflow', 'Remove infected fruit']
+  },
+  {
+    id: 'root_knot_nematodes',
+    name: 'Root-knot Nematodes',
+    category: 'Soil-borne',
+    severity: 'High',
+    symptoms: ['Stunting', 'Midday wilting', 'Root galls'],
+    causes: ['Meloidogyne species', 'Infested soil', 'Continuous cucurbit planting'],
+    actions: ['Rotate crops', 'Use resistant varieties', 'Solarize or improve soil']
+  },
+  {
+    id: 'bacterial_fruit_spot',
+    name: 'Bacterial Fruit Blotch',
+    category: 'Bacterial',
+    severity: 'High',
+    symptoms: ['Small fruit spots', 'Creamy lesions', 'Fruit cracking'],
+    causes: ['Acidovorax citrulli', 'Infected seed', 'Splashing water'],
+    actions: ['Remove infected fruit', 'Use certified seed', 'Avoid overhead irrigation']
+  },
+  {
+    id: 'broad_mites',
+    name: 'Broad Mites',
+    category: 'Pest',
+    severity: 'Medium',
+    symptoms: ['Distorted new leaves', 'Bronzed growth', 'Stunted shoots'],
+    causes: ['Broad mite feeding', 'Infested transplants', 'Warm conditions'],
+    actions: ['Remove affected growth', 'Inspect new plants', 'Use labelled miticide']
+  },
+  {
+    id: 'flea_beetles',
+    name: 'Flea Beetles',
+    category: 'Pest',
+    severity: 'Low',
+    symptoms: ['Tiny shot holes', 'Seedling damage', 'Wilting young plants'],
+    causes: ['Adult flea beetle feeding', 'Weeds', 'Unprotected seedlings'],
+    actions: ['Use row covers', 'Remove weeds', 'Monitor seedlings closely']
   }
 ]
 
@@ -339,7 +512,9 @@ const filteredDiseases = computed(() => {
     result = result.filter(d => 
       d.name.toLowerCase().includes(q) ||
       d.category.toLowerCase().includes(q) ||
-      d.symptoms.some(s => s.toLowerCase().includes(q))
+      d.symptoms.some(s => s.toLowerCase().includes(q)) ||
+      d.causes.some(cause => cause.toLowerCase().includes(q)) ||
+      d.actions.some(action => action.toLowerCase().includes(q))
     )
   }
   
@@ -362,6 +537,9 @@ const bacterialCount = computed(() => {
   return diseases.filter(d => d.category === 'Bacterial').length
 })
 
+const pestCount = computed(() => diseases.filter(d => d.category === 'Pest').length)
+const diseaseCount = computed(() => diseases.length - pestCount.value)
+
 const getCategoryCount = (category) => {
   if (category === 'all') return diseases.length
   return diseases.filter(d => d.category === category).length
@@ -372,7 +550,8 @@ const getDetectionRate = (disease) => {
     'Fungal': 95,
     'Bacterial': 92,
     'Viral': 88,
-    'Soil-borne': 90
+    'Soil-borne': 90,
+    Pest: 86
   }
   return rates[disease.category] || 90
 }

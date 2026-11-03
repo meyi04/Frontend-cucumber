@@ -1092,6 +1092,13 @@ onUnmounted(() => {
   height: 200px;
 }
 
+.status-donut {
+  position: relative;
+  width: 160px;
+  height: 160px;
+  flex: 0 0 160px;
+}
+
 .donut-chart {
   width: 160px;
   height: 160px;

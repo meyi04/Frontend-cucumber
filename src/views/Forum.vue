@@ -94,7 +94,6 @@
                 <button class="action-btn" @click="toggleReply(post.id)">
                   {{ activeReplyId === post.id ? t('cancel') : t('reply') }}
                 </button>
-                <button class="action-btn secondary">{{ t('share') }}</button>
                 <button
                   v-if="post.replies?.length"
                   class="action-btn secondary"

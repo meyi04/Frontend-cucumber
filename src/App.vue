@@ -1,10 +1,14 @@
 <template>
   <div class="app-shell min-h-screen bg-gray-100">
     <!-- Show loading only briefly -->
-    <div v-if="initialLoading && !isAppReady" class="fixed inset-0 flex items-center justify-center bg-white z-50 transition-opacity duration-300">
-      <div class="text-center">
+    <div v-if="initialLoading && !isAppReady" class="app-loading-screen">
+      <div class="app-loading-card">
+        <div class="app-loading-logo">
+          <img src="/logo.png" alt="Cu-Scan" />
+        </div>
+        <strong>Cu-Scan</strong>
         <div class="spinner"></div>
-        <p class="mt-4 text-gray-600">Loading application...</p>
+        <p>Loading application...</p>
       </div>
     </div>
 
@@ -137,6 +141,53 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
+.app-loading-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(145deg, #f8fcfa, #eaf7f0);
+}
+
+.app-loading-card {
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+  color: #07523e;
+  text-align: center;
+}
+
+.app-loading-logo {
+  width: 86px;
+  height: 86px;
+  display: grid;
+  place-items: center;
+  padding: 11px;
+  background: #fff;
+  border: 1px solid rgba(16, 185, 129, .16);
+  border-radius: 25px;
+  box-shadow: 0 18px 45px rgba(7, 82, 62, .14);
+  animation: logo-pulse 1.6s ease-in-out infinite;
+}
+
+.app-loading-logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.app-loading-card strong {
+  font-size: 1.25rem;
+  letter-spacing: -.03em;
+}
+
+.app-loading-card p {
+  margin: -4px 0 0;
+  color: #6b8177;
+  font-size: .82rem;
+}
+
 .spinner {
   width: 44px;
   height: 44px;
@@ -145,6 +196,11 @@ onUnmounted(() => {
   border-radius: 50%;
   animation: spin 0.85s linear infinite;
   margin: 0 auto;
+}
+
+@keyframes logo-pulse {
+  0%, 100% { transform: scale(1); opacity: .9; }
+  50% { transform: scale(1.05); opacity: 1; }
 }
 
 @keyframes spin {

@@ -26,7 +26,10 @@
       </div>
       <div class="status-item" v-if="modelStatus.class_names">
         <span class="status-label">{{ t('classes') }}:</span>
-        <span class="status-value">{{ t('diseasesCount', { count: modelStatus.class_names.length }) }}</span>
+        <span class="status-value">
+          {{ t('diseasesCount', { count: modelStatus.class_names.length }) }} +
+          {{ t('pestsCount', { count: 5 }) }}
+        </span>
       </div>
       <div class="status-item">
         <span class="status-label">{{ t('backend') }}:</span>
@@ -99,7 +102,7 @@
               type="file"
               ref="fileInput"
               @change="handleFileSelect"
-              accept="image/*"
+              accept="image/*,.heic,.heif,.avif,.jxl"
               class="hidden-input"
             />
             <div class="drop-content">
@@ -284,14 +287,18 @@
         </div>
 
         <div v-if="pestScanResult || pestScanError" class="pest-result-card">
-          <div v-if="pestScanResult" class="pest-result-header">
+          <p v-if="pestScanResult && pestScanResult.pest === 'No pest detected'" class="pest-no-detection">
+            No pest are detected
+          </p>
+          <template v-else-if="pestScanResult">
+            <div class="pest-result-header">
             <div>
               <h4>🪲 {{ t('pestScanResult') }}</h4>
               <p class="pest-subtitle">{{ t('pestGuidance') }}</p>
             </div>
             <span class="pest-badge">{{ pestScanResult.pest }}</span>
-          </div>
-          <div v-if="pestScanResult" class="pest-details">
+            </div>
+            <div class="pest-details">
             <p class="pest-confidence">{{ t('confidence') }}: {{ pestScanResult.confidence }}%</p>
             <div class="pest-section">
               <h5>{{ t('detectedPest') }}</h5>
@@ -303,9 +310,8 @@
                 <li v-for="(rec, index) in pestScanResult.recommendations" :key="index">{{ rec }}</li>
               </ul>
             </div>
-            <p class="pest-note">{{ pestScanResult.note }}</p>
-            <p v-if="pestSaveStatus" class="pest-note">{{ pestSaveStatus }}</p>
-          </div>
+            </div>
+          </template>
           <p v-if="pestScanError" class="pest-note">{{ pestScanError }}</p>
         </div>
 
@@ -397,21 +403,6 @@
       </div>
     </div>
 
-    <!-- Recent Uploads -->
-    <div v-if="recentUploads.length > 0" class="recent-uploads">
-      <h3>{{ t('recentUploads') }}</h3>
-      <div class="uploads-grid">
-        <div v-for="upload in recentUploads" :key="upload.id" class="upload-item">
-          <img :src="upload.image" :alt="upload.name" class="upload-thumbnail" />
-          <div class="upload-details">
-            <p class="upload-name">{{ upload.name }}</p>
-            <p class="upload-date">{{ upload.date }}</p>
-            <span class="upload-status" :class="upload.status">{{ ['healthy', 'infected'].includes(upload.status) ? t(upload.status) : upload.status }}</span>
-            <p class="upload-disease">{{ upload.disease }}</p>
-          </div>
-        </div>
-      </div>
-    </div>
   </div>
 </template>
 
@@ -487,22 +478,33 @@ const triggerFileInput = () => {
   fileInput.value?.click()
 }
 
+const isImageFile = (file) => {
+  if (file.type?.startsWith('image/')) return true
+  return /\.(avif|bmp|gif|heic|heif|ico|jpe?g|jxl|png|svg|tif?f|webp)$/i.test(file.name)
+}
+
+const selectImageFile = (file) => {
+  if (!file || !isImageFile(file)) {
+    alert(t('imageFileRequired'))
+    return
+  }
+  if (file.size > 10 * 1024 * 1024) {
+    alert(t('fileSizeExceeded'))
+    return
+  }
+  selectedFile.value = file
+  capturedImage.value = ''
+  processingError.value = null
+  const reader = new FileReader()
+  reader.onload = (e) => {
+    imagePreview.value = e.target.result
+  }
+  reader.readAsDataURL(file)
+}
+
 const handleFileSelect = (event) => {
   const file = event.target.files[0]
-  if (file && file.type.startsWith('image/')) {
-    if (file.size > 10 * 1024 * 1024) { // 10MB limit
-      alert(t('fileSizeExceeded'))
-      return
-    }
-    selectedFile.value = file
-    capturedImage.value = ''
-    processingError.value = null
-    const reader = new FileReader()
-    reader.onload = (e) => {
-      imagePreview.value = e.target.result
-    }
-    reader.readAsDataURL(file)
-  }
+  selectImageFile(file)
 }
 
 const handleDragOver = (event) => {
@@ -514,20 +516,7 @@ const handleDrop = (event) => {
   event.preventDefault()
   isDragOver.value = false
   const file = event.dataTransfer.files[0]
-  if (file && file.type.startsWith('image/')) {
-    if (file.size > 10 * 1024 * 1024) {
-      alert(t('fileSizeExceeded'))
-      return
-    }
-    selectedFile.value = file
-    capturedImage.value = ''
-    processingError.value = null
-    const reader = new FileReader()
-    reader.onload = (e) => {
-      imagePreview.value = e.target.result
-    }
-    reader.readAsDataURL(file)
-  }
+  selectImageFile(file)
 }
 
 const removeFile = () => {
@@ -827,6 +816,140 @@ const savePestScanToFirestore = async (file, result) => {
   }
 }
 
+const getPestRecommendations = pest => {
+  const name = String(pest || '').toLowerCase()
+  if (name.includes('no pest')) return [
+    'No visible pest was detected in this image; continue inspecting both sides of leaves every few days.',
+    'Keep the growing area free of weeds and plant debris and use row covers on young plants.',
+    'Maintain airflow and avoid unnecessary insecticides so beneficial insects remain active.',
+    'If damage continues, upload a clearer image showing the whole plant and close-ups of the affected areas.'
+  ]
+  if (name.includes('aphid')) return [
+    'Rinse aphids from leaf undersides and new growth with water; repeat every few days.',
+    'Remove badly infested tips and control ants that protect aphids.',
+    'Protect ladybugs and lacewings; use yellow sticky traps for monitoring.',
+    'If pressure remains high, use insecticidal soap or horticultural oil labelled for aphids and cucumbers. Follow the label and avoid flowers.'
+  ]
+  if (name.includes('whitefly')) return [
+    'Inspect leaf undersides and remove heavily infested leaves.',
+    'Use yellow sticky traps and rinse the undersides of leaves.',
+    'Remove weeds and protect predatory insects.',
+    'Use insecticidal soap, horticultural oil, or another product specifically labelled for whiteflies on cucumbers. Follow the label.'
+  ]
+  if (name.includes('thrip')) return [
+    'Remove weeds and badly damaged growth and place blue or yellow sticky traps.',
+    'Inspect flowers and young leaves regularly for silvery scars and black specks.',
+    'Protect predatory mites and other beneficial insects.',
+    'Use a product labelled for thrips and cucumbers only after confirming active infestation, following pollinator and harvest directions.'
+  ]
+  if (name.includes('mite')) return [
+    'Rinse the undersides of leaves and isolate heavily infested plants.',
+    'Reduce dusty, very dry conditions without keeping foliage wet overnight.',
+    'Avoid broad-spectrum insecticides because they can worsen mite outbreaks.',
+    'Use a labelled horticultural oil or miticide for cucumbers when needed; follow the label and test a small area first.'
+  ]
+  if (name.includes('beetle')) return [
+    'Hand-pick beetles and use row covers on young plants, removing covers during flowering.',
+    'Remove weeds and plant debris where beetles shelter.',
+    'Monitor for feeding holes and wilting because cucumber beetles can spread bacterial wilt.',
+    'If damage continues, use only a cucumber-labelled treatment and follow pollinator-safety and harvest instructions.'
+  ]
+  if (name.includes('cutworm')) return [
+    'Inspect around the soil line after dark and hand-remove caterpillars.',
+    'Clear weeds and debris and place collars around young seedlings.',
+    'Keep the growing area clean and check seedlings daily.',
+    'Use a labelled cutworm treatment only for confirmed damage and follow the label.'
+  ]
+  return [
+    'Confirm the pest by inspecting both sides of leaves, stems, flowers, and nearby soil.',
+    'Remove visible pests by hand, rinse foliage where appropriate, and use traps or row covers.',
+    'Remove weeds and damaged plant material while protecting beneficial insects.',
+    'Use only an agricultural product labelled for this pest and cucumbers; follow the label, protective-equipment, pollinator, and harvest instructions.'
+  ]
+}
+
+const getDefaultRecommendations = disease => {
+  const name = String(disease || '').toLowerCase().replace(/[\s-]+/g, '_')
+  const recommendations = {
+    angular_leaf_spot: [
+      'Remove infected leaves and disinfect pruning tools between plants.',
+      'Water at soil level, improve airflow, and avoid handling wet foliage.',
+      'Use clean seed and rotate away from cucurbits.',
+      'A labelled copper bactericide may suppress spread; it will not repair damaged tissue. Follow the label.'
+    ],
+    downy_mildew: [
+      'Remove badly affected leaves and bag them instead of composting.',
+      'Increase spacing and airflow and avoid overhead irrigation.',
+      'Monitor new growth because downy mildew can spread quickly in humid weather.',
+      'Use a fungicide labelled for downy mildew on cucumbers as soon as possible; rotate product groups only as the label directs.'
+    ],
+    powdery_mildew: [
+      'Remove heavily affected leaves and disinfect tools.',
+      'Improve airflow, reduce crowding, and avoid excessive nitrogen fertilizer.',
+      'Keep plants watered at the soil without wetting foliage overnight.',
+      'Use labelled sulfur, potassium bicarbonate, biological, or other approved fungicide products; follow the label and test first.'
+    ],
+    bacterial_wilt: [
+      'Remove and bag the whole infected plant; do not compost it because there is no reliable cure.',
+      'Control cucumber beetles and disinfect tools and hands after removal.',
+      'Avoid moving wet soil or plant debris to healthy beds.',
+      'Use resistant varieties and row covers next season; copper products do not cure systemic bacterial wilt.'
+    ],
+    anthracnose: [
+      'Remove infected leaves and fruit and dispose of them away from the garden.',
+      'Keep foliage and fruit dry, improve airflow, and rotate cucurbit crops.',
+      'Clean plant debris after harvest and avoid working among wet plants.',
+      'Use a cucumber-labelled fungicide such as an approved chlorothalonil or mancozeb product where permitted; follow the label and harvest interval.'
+    ],
+    mosaic_virus: [
+      'Remove and bag confirmed infected plants because there is no curative fungicide.',
+      'Control aphids, remove weeds, and disinfect hands and tools to prevent sap spread.',
+      'Do not save seed from affected plants.',
+      'Use certified seed and resistant varieties when available.'
+    ],
+    gummy_stem_blight: [
+      'Remove infected vines and avoid working among wet plants.',
+      'Improve airflow, water at soil level, and remove crop debris.',
+      'Use clean seed and rotate cucurbit crops.',
+      'Use a fungicide labelled for gummy stem blight on cucumbers and follow the label.'
+    ],
+    fusarium_wilt: [
+      'Remove infected plants and avoid moving contaminated soil between beds.',
+      'Improve drainage and prevent root injury.',
+      'Rotate crops and use resistant varieties or grafted plants when available.',
+      'There is no reliable rescue spray for established vascular wilt; do not apply unlabelled soil chemicals.'
+    ],
+    phytophthora_blight: [
+      'Remove infected fruit and plants and improve drainage immediately.',
+      'Avoid flooding, overhead irrigation, and moving wet soil or equipment.',
+      'Use raised beds or clean growing media where possible.',
+      'Use only a fungicide labelled for Phytophthora on cucumbers; follow the label and resistance-management directions.'
+    ],
+    damping_off: [
+      'Remove collapsed seedlings and improve drainage and air movement.',
+      'Reduce watering and avoid keeping seed-starting media saturated.',
+      'Use sterile containers, clean media, and treated or certified seed.',
+      'Do not reuse contaminated potting media; fungicide use must be specifically labelled for the crop and disease.'
+    ]
+  }
+  return recommendations[name] || [
+    'Remove badly affected tissue and dispose of suspected disease material; do not compost it.',
+    'Improve airflow, water at soil level, and disinfect tools between plants.',
+    'Confirm the cause before spraying because pest, nutrient, and watering stress can look similar.',
+    'Use only an agricultural product labelled for the confirmed disease and cucumbers. Follow all label, protective-equipment, and harvest instructions.'
+  ]
+}
+
+const hasActionableRecommendations = recommendations => {
+  if (!Array.isArray(recommendations) || recommendations.length < 2) return false
+  return recommendations.some(recommendation => {
+    const text = String(recommendation).toLowerCase()
+    return !text.includes('consult agricultural expert') &&
+      !text.includes('consult an agricultural expert') &&
+      !text.includes('seek professional advice')
+  })
+}
+
 const scanForPest = async () => {
   if (!canProcess.value) return
 
@@ -875,7 +998,7 @@ const scanForPest = async () => {
       const response = await fetch(`${API_BASE_URL}/pest-detect`, {
         method: 'POST',
         body: formData,
-        signal: AbortSignal.timeout(10000)
+        signal: AbortSignal.timeout(30000)
       })
 
       if (!response.ok) {
@@ -888,25 +1011,16 @@ const scanForPest = async () => {
           const pred = data.prediction || {}
           generatedResult = {
             pest: pred.pest || 'Unknown',
-            confidence: Math.round((pred.confidence || 0.8) * 100),
-            note: t('pestRandomNote'),
+            confidence: Math.round((pred.confidence || 0) * 100),
+            note: t('pestRoboflowNote'),
             availablePests: pred.available_pests || [],
-            recommendations: pred.recommendations || []
+            recommendations: pred.recommendations?.length ? pred.recommendations : getPestRecommendations(pred.pest),
+            detections: pred.detections || []
           }
         }
       }
-    } catch {}
-
-    if (!generatedResult) {
-      const localPests = ['Aphids', 'Whiteflies', 'Spider Mites', 'Thrips']
-      const pest = localPests[Math.floor(Math.random() * localPests.length)]
-      generatedResult = {
-        pest,
-        confidence: Math.round(75 + Math.random() * 20),
-        note: t('pestRandomNote'),
-        availablePests: localPests,
-        recommendations: []
-      }
+    } catch (error) {
+      throw new Error(error.message || 'Roboflow pest scan failed')
     }
 
     const remainingWindow = 2000 - (Date.now() - scanStartedAt)
@@ -1030,7 +1144,11 @@ const processImage = async () => {
         disease: isFresh ? 'Healthy' : (pred.disease_display || formatDiseaseName(diseaseKey)),
         diseaseKey: isFresh ? 'healthy' : diseaseKey,
         symptoms: pred.symptoms || getSymptomsForDisease(isFresh ? 'healthy' : diseaseKey),
-        recommendations: pred.recommendations || pred.suggestions || getDefaultRecommendations(isFresh ? 'healthy' : diseaseKey),
+        recommendations: hasActionableRecommendations(pred.recommendations)
+          ? pred.recommendations
+          : hasActionableRecommendations(pred.suggestions)
+            ? pred.suggestions
+            : getDefaultRecommendations(isFresh ? 'healthy' : diseaseKey),
         all_predictions: pred.all_predictions || {},
         timestamp: pred.timestamp || new Date().toISOString(),
         fromBackend: true
